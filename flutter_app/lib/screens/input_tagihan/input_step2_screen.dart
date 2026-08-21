@@ -66,6 +66,11 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
         if (val != null) {
           _meterLaluController.text = val.toStringAsFixed(2);
           _meterLaluAutoFilled = true;
+        } else {
+          // Belum ada data periode sebelumnya (input pertama kali)
+          // → biarkan kosong, user isi manual
+          _meterLaluController.text = '';
+          _meterLaluAutoFilled = false;
         }
       });
     }
@@ -146,120 +151,85 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
           _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Info card
+                  // Info lokasi terpilih
                   _buildLocationInfo(),
                   const SizedBox(height: 20),
 
                   // Pencatatan Meter
-                  _buildSectionTitle('Pencatatan Meter'),
+                  _buildSectionTitle(
+                      Icons.speed_rounded, 'Pencatatan Meter'),
                   const SizedBox(height: 12),
-
-                  _buildInputRow(
-                    'Meter Bulan Lalu (m³)',
-                    _meterLaluController,
-                    readOnly: _meterLaluAutoFilled,
-                    isLoading: _isLoadingMeterLalu,
-                    hint: _meterLaluAutoFilled
-                        ? 'Auto dari periode sebelumnya'
-                        : 'Masukkan manual (data awal)',
-                  ),
-                  const SizedBox(height: 14),
-
-                  _buildInputRow(
-                    'Meter Bulan Ini (m³)',
-                    _meterIniController,
-                    hint: 'Masukkan angka meter',
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 14),
-
-                  _buildInputRow(
-                    'Total Pemakaian (m³)',
-                    null,
-                    displayValue: _pemakaian.toStringAsFixed(2),
-                    readOnly: true,
-                  ),
-                  const SizedBox(height: 14),
-
-                  _buildInputRow(
-                    'Meter Faktor',
-                    _meterFaktorController,
-                    hint: '1',
-                  ),
-                  const SizedBox(height: 14),
-
-                  _buildInputRow(
-                    'Tarif (Rp/m³)',
-                    _tarifController,
-                    hint: 'Tarif per m3',
-                    prefix: 'Rp ',
-                  ),
+                  _buildMeterCard(),
                   const SizedBox(height: 20),
 
                   // Ringkasan Tagihan
-                  _buildSectionTitle('Ringkasan Tagihan'),
-                  const SizedBox(height: 12),
                   _buildEstimateCard(),
                   const SizedBox(height: 20),
 
                   // Bukti Foto
-                  _buildSectionTitle('Bukti Foto Meteran'),
+                  _buildSectionTitle(
+                      Icons.camera_alt_rounded, 'Bukti Foto Meteran'),
                   const SizedBox(height: 12),
                   _buildPhotoSection(),
                   const SizedBox(height: 24),
 
-                  // Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                          label: Text('Kembali',
+                  // Simpan & Lanjutkan
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: _canNext ? _next : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _canNext
+                            ? AppTheme.primary
+                            : AppTheme.textMuted.withValues(alpha: 0.4),
+                        disabledBackgroundColor:
+                            AppTheme.textMuted.withValues(alpha: 0.4),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.save_rounded,
+                              size: 18, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text('Simpan & Lanjutkan',
                               style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w600)),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusMd),
-                            ),
-                          ),
-                        ),
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                fontSize: 15,
+                              )),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: _canNext ? _next : null,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: _canNext
-                                ? AppTheme.primary
-                                : AppTheme.primary.withValues(alpha: 0.3),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('Lanjut Review',
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  )),
-                              const SizedBox(width: 6),
-                              const Icon(Icons.arrow_forward_rounded,
-                                  size: 18, color: Colors.white),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
+
+                  // Batal
+                  Center(
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'Batal',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -269,9 +239,19 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     );
   }
 
+  // ── Header (sama seperti step1) ──
   Widget _buildHeader() {
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.headerGradient),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       padding: EdgeInsets.fromLTRB(
           16, MediaQuery.of(context).padding.top + 12, 16, 16),
       child: Column(
@@ -279,31 +259,42 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
           Row(
             children: [
               GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => Navigator.of(context).maybePop(),
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppTheme.textPrimary.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.arrow_back_rounded,
-                      color: Colors.white, size: 20),
+                      color: AppTheme.textPrimary, size: 18),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.bolt_rounded,
+                    color: Colors.white, size: 15),
+              ),
+              const SizedBox(width: 8),
               Text(
-                'TAGIHAN',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
+                'INPUT TAGIHAN',
+                style: GoogleFonts.hankenGrotesk(
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                  color: Colors.white.withValues(alpha: 0.85),
+                  letterSpacing: 0.4,
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildStepper(1),
         ],
       ),
@@ -316,13 +307,18 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
       children: List.generate(steps.length * 2 - 1, (i) {
         if (i.isOdd) {
           final stepIdx = i ~/ 2;
+          final isDone = stepIdx < currentStep;
           return Expanded(
-            child: Container(
-              height: 2,
-              color: stepIdx < currentStep
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.3),
-            ),
+            child: isDone
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 22),
+                    child: Container(height: 2, color: AppTheme.primary),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.only(bottom: 22),
+                    child: _DashedLine(
+                        color: AppTheme.divider.withValues(alpha: 0.7)),
+                  ),
           );
         }
         final stepIdx = i ~/ 2;
@@ -331,39 +327,43 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
         return Column(
           children: [
             Container(
-              width: 28,
-              height: 28,
+              width: 26,
+              height: 26,
               decoration: BoxDecoration(
-                color: isActive || isCompleted
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.25),
+                color: isCompleted
+                    ? AppTheme.primary
+                    : (isActive ? AppTheme.secondary : Colors.white),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: isCompleted
+                      ? AppTheme.primary
+                      : (isActive ? AppTheme.secondary : AppTheme.divider),
+                  width: 1.4,
+                ),
               ),
               child: Center(
                 child: isCompleted
-                    ? const Icon(Icons.check,
-                        size: 16, color: AppTheme.primary)
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
                     : Text(
                         '${stepIdx + 1}',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: isActive
-                              ? AppTheme.primary
-                              : Colors.white.withValues(alpha: 0.6),
+                          color: isActive ? Colors.white : AppTheme.textMuted,
                         ),
                       ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               steps[stepIdx],
               style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                fontSize: 12,
+                fontWeight:
+                    isActive || isCompleted ? FontWeight.w700 : FontWeight.w400,
                 color: isActive || isCompleted
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.5),
+                    ? AppTheme.textPrimary
+                    : AppTheme.textMuted,
               ),
             ),
           ],
@@ -372,204 +372,448 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     );
   }
 
+  // ── Card Lokasi Terpilih ──
   Widget _buildLocationInfo() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.pemakaianCardBg.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.location_on_rounded,
+                  size: 16, color: AppTheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                'LOKASI TERPILIH',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: const Icon(Icons.edit_rounded,
+                    size: 16, color: AppTheme.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${widget.area.nama} - ${widget.titikMeter.nama}',
+            style: GoogleFonts.hankenGrotesk(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(Icons.speed_rounded, size: 13, color: AppTheme.textMuted),
+              const SizedBox(width: 5),
+              Text(
+                'Meter ID: ${widget.titikMeter.id}',
+                style: GoogleFonts.inter(
+                    fontSize: 12, color: AppTheme.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Row(
+            children: [
+              Icon(Icons.calendar_today_rounded,
+                  size: 13, color: AppTheme.textMuted),
+              const SizedBox(width: 5),
+              Text(
+                'Periode: ${widget.periode}',
+                style: GoogleFonts.inter(
+                    fontSize: 12, color: AppTheme.textMuted),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(IconData icon, String title) {
+    return Row(
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 13, color: AppTheme.primary),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Card putih berisi semua field pencatatan meter ──
+  Widget _buildMeterCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow(Icons.location_on_rounded, 'Area', widget.area.nama),
-          const Divider(height: 16),
-          _infoRow(Icons.speed_rounded, 'Titik Meter', widget.titikMeter.nama),
-          const Divider(height: 16),
-          _infoRow(Icons.calendar_today_rounded, 'Periode', widget.periode),
+          // Meter Bulan Lalu
+          // → Jika ada riwayat periode sebelumnya: auto-fill & terkunci (readonly)
+          // → Jika belum ada riwayat (input pertama kali): bisa diisi manual
+          Row(
+            children: [
+              _buildFieldLabel('Meter Bulan Lalu (m\u00b3)'),
+              if (!_isLoadingMeterLalu && !_meterLaluAutoFilled)
+                Text(' *',
+                    style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.error)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (_isLoadingMeterLalu)
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5FB),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: const SizedBox(
+                height: 20,
+                child: Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppTheme.primary),
+                  ),
+                ),
+              ),
+            )
+          else if (_meterLaluAutoFilled)
+            // Sudah ada riwayat periode sebelumnya → readonly & terkunci
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5FB),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _meterLaluController.text,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.lock_outline_rounded,
+                      size: 16, color: AppTheme.textMuted),
+                ],
+              ),
+            )
+          else
+            // Belum ada riwayat (input pertama kali) → bisa diisi manual
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _meterLaluController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '0.00',
+                        hintStyle:
+                            GoogleFonts.inter(color: AppTheme.textMuted),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                  Icon(Icons.edit_note_rounded,
+                      size: 20, color: AppTheme.textMuted),
+                ],
+              ),
+            ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(Icons.info_outline_rounded,
+                  size: 12, color: AppTheme.textMuted),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  _isLoadingMeterLalu
+                      ? 'Memeriksa data periode sebelumnya\u2026'
+                      : (_meterLaluAutoFilled
+                          ? 'Otomatis dari periode sebelumnya \u00b7 terkunci'
+                          : 'Belum ada data periode sebelumnya, silakan isi manual'),
+                  style: GoogleFonts.inter(
+                      fontSize: 11, color: AppTheme.textMuted),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Meter Bulan Ini (required)
+          Row(
+            children: [
+              _buildFieldLabel('Meter Bulan Ini (m\u00b3)'),
+              Text(' *',
+                  style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.error)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _meterIniController,
+                    autofocus: false,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '0.00',
+                      hintStyle: GoogleFonts.inter(color: AppTheme.textMuted),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                Icon(Icons.edit_note_rounded,
+                    size: 20, color: AppTheme.textMuted),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Meter Faktor & Tarif
+          Row(
+            children: [
+              Expanded(
+                child: _buildMiniField(
+                  label: 'Meter Faktor',
+                  controller: _meterFaktorController,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMiniField(
+                  label: 'Tarif (Rp/m\u00b3)',
+                  controller: _tarifController,
+                  prefix: 'Rp ',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Pemakaian Terkoreksi (highlight)
+          _buildFieldLabel('Pemakaian Terkoreksi (m\u00b3)'),
+          const SizedBox(height: 6),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLight.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            ),
+            child: Text(
+              _pemakaian.toStringAsFixed(2),
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.primaryDark,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
-    return Row(
+  Widget _buildFieldLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: AppTheme.textSecondary,
+      ),
+    );
+  }
+
+  Widget _buildMiniField({
+    required String label,
+    required TextEditingController controller,
+    String? prefix,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppTheme.primary),
-        const SizedBox(width: 8),
-        Text('$label: ',
+        Text(
+          label,
+          style: GoogleFonts.inter(
+              fontSize: 11, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5FB),
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-                fontSize: 12, color: AppTheme.textSecondary)),
-        Expanded(
-          child: Text(value,
-              style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary)),
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+            decoration: InputDecoration(
+              prefixText: prefix,
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: AppTheme.textPrimary,
-      ),
-    );
-  }
-
-  Widget _buildInputRow(
-    String label,
-    TextEditingController? controller, {
-    String? hint,
-    String? prefix,
-    String? displayValue,
-    bool readOnly = false,
-    bool autofocus = false,
-    bool isLoading = false,
-  }) {
+  // ── Card Estimasi Tagihan (dark navy) ──
+  Widget _buildEstimateCard() {
+    final tarif = double.tryParse(_tarifController.text) ?? 0;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.heroCardBg,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: AppTheme.elevatedShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+          Positioned(
+            right: -12,
+            bottom: -10,
+            child: Icon(
+              Icons.receipt_long_rounded,
+              size: 90,
+              color: Colors.white.withValues(alpha: 0.04),
             ),
           ),
-          const SizedBox(height: 4),
-          if (isLoading)
-            const SizedBox(
-              height: 24,
-              child: Center(
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: AppTheme.primary),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'ESTIMASI TAGIHAN',
+                    style: GoogleFonts.hankenGrotesk(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                      color: AppTheme.heroCardLabel,
+                    ),
+                  ),
+                  Icon(Icons.receipt_long_rounded,
+                      size: 18, color: AppTheme.heroCardLabel),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Tarif: ${_currencyFormat.format(tarif)} / m\u00b3',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppTheme.heroCardLabel,
                 ),
               ),
-            )
-          else if (displayValue != null)
-            Text(
-              displayValue,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
-            )
-          else
-            TextField(
-              controller: controller,
-              readOnly: readOnly,
-              autofocus: autofocus,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
-              decoration: InputDecoration(
-                hintText: hint,
-                prefixText: prefix,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                filled: false,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEstimateCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Meter Bulan Ini',
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8))),
+              const SizedBox(height: 6),
               Text(
-                  '${double.tryParse(_meterIniController.text)?.toStringAsFixed(2) ?? "0.00"} m³',
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Meter Bulan Lalu',
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8))),
-              Text(
-                  '${double.tryParse(_meterLaluController.text)?.toStringAsFixed(2) ?? "0.00"} m³',
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Pemakaian',
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8))),
-              Text('${_pemakaian.toStringAsFixed(2)} m³',
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white)),
-            ],
-          ),
-          const Divider(color: Colors.white30, height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Total Estimasi',
-                  style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
-              Text(_currencyFormat.format(_estimasi),
-                  style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                _currencyFormat.format(_estimasi),
+                style: GoogleFonts.hankenGrotesk(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
         ],
@@ -577,6 +821,7 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     );
   }
 
+  // ── Bukti Foto Meteran (single dashed box + thumbnail strip) ──
   Widget _buildPhotoSection() {
     return Column(
       children: [
@@ -619,54 +864,150 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
         Row(
           children: [
             Expanded(
-              child: _photoButton(
-                Icons.camera_alt_rounded,
-                'Ambil Foto',
-                _pickPhoto,
+              child: _photoOptionBox(
+                icon: Icons.camera_alt_rounded,
+                label: 'Ambil Foto',
+                onTap: _fotos.length >= 10 ? null : _pickPhoto,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _photoButton(
-                Icons.photo_library_rounded,
-                'Galeri',
-                _pickFromGallery,
+              child: _photoOptionBox(
+                icon: Icons.upload_file_rounded,
+                label: 'Pilih File',
+                onTap: _fotos.length >= 10 ? null : _pickFromGallery,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
-          '${_fotos.length}/10 foto (opsional)',
+          'Format JPG, PNG (Max 5MB) \u00b7 ${_fotos.length}/10 foto',
           style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textMuted),
         ),
       ],
     );
   }
 
-  Widget _photoButton(IconData icon, String label, VoidCallback onTap) {
+  Widget _photoOptionBox({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onTap,
+  }) {
     return GestureDetector(
-      onTap: _fotos.length >= 10 ? null : onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            style: BorderStyle.solid,
+      onTap: onTap,
+      child: DottedBorderBox(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppTheme.primary, size: 20),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
           ),
         ),
-        child: Column(
-          children: [
-            Icon(icon, size: 28, color: AppTheme.textMuted),
-            const SizedBox(height: 4),
-            Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 12, color: AppTheme.textSecondary)),
-          ],
-        ),
       ),
+    );
+  }
+}
+
+// ── Kotak dengan border putus-putus untuk area upload foto ──
+class DottedBorderBox extends StatelessWidget {
+  final Widget child;
+  const DottedBorderBox({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DashedBorderPainter(
+        color: AppTheme.divider,
+        radius: AppTheme.radiusMd,
+      ),
+      child: child,
+    );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  _DashedBorderPainter({required this.color, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0.7, 0.7, size.width - 1.4, size.height - 1.4),
+      Radius.circular(radius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    final metrics = path.computeMetrics();
+    for (final metric in metrics) {
+      const dashWidth = 5.0;
+      const dashSpace = 4.0;
+      double distance = 0;
+      while (distance < metric.length) {
+        canvas.drawPath(
+          metric.extractPath(distance, distance + dashWidth),
+          paint,
+        );
+        distance += dashWidth + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) => false;
+}
+
+// ── Garis putus-putus untuk connector stepper (sama seperti step1) ──
+class _DashedLine extends StatelessWidget {
+  final Color color;
+  const _DashedLine({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const dashWidth = 4.0;
+        const dashSpace = 4.0;
+        final dashCount =
+            (constraints.maxWidth / (dashWidth + dashSpace)).floor();
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(dashCount, (_) {
+            return SizedBox(
+              width: dashWidth,
+              height: 1.4,
+              child: DecoratedBox(decoration: BoxDecoration(color: color)),
+            );
+          }),
+        );
+      },
     );
   }
 }
