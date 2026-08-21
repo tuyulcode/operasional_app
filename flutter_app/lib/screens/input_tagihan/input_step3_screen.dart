@@ -45,6 +45,9 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
   final _currencyFormat =
       NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
+  // Warna aksen untuk highlight total estimasi (teal/cyan)
+  static const Color _accentTeal = Color(0xFF2DD9C4);
+
   void _submit() async {
     final prov = context.read<TagihanProvider>();
     final success = await prov.storeTagihan(
@@ -146,95 +149,25 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
           _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Lokasi
-                  _buildSection('Lokasi Meter', [
-                    _reviewRow('Area', widget.area.nama),
-                    _reviewRow('Titik Meter', widget.titikMeter.nama),
-                    _reviewRow('Periode', widget.periode),
-                  ]),
-                  const SizedBox(height: 16),
+                  // Info lokasi terpilih
+                  _buildLocationInfo(),
+                  const SizedBox(height: 20),
 
-                  // Data Meter
-                  _buildSection('Data Pencatatan', [
-                    _reviewRow('Meter Lalu', '${widget.meterLalu.toStringAsFixed(2)} m³'),
-                    _reviewRow('Meter Ini', '${widget.meterIni.toStringAsFixed(2)} m³'),
-                    _reviewRow('Meter Faktor', widget.meterFaktor.toString()),
-                    _reviewRow('Tarif/m³', _currencyFormat.format(widget.tarif)),
-                    _reviewRow('Pemakaian', '${widget.pemakaian.toStringAsFixed(2)} m³'),
-                  ]),
-                  const SizedBox(height: 16),
-
-                  // Estimasi
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('ESTIMASI TAGIHAN',
-                                style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                    color: Colors.white.withValues(alpha: 0.8))),
-                            const SizedBox(height: 4),
-                            Text(
-                              _currencyFormat.format(widget.estimasi),
-                              style: GoogleFonts.inter(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.receipt_long_rounded,
-                              color: Colors.white, size: 24),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  // Ringkasan Tagihan (dark navy card, gabungan data + estimasi)
+                  _buildRingkasanCard(),
+                  const SizedBox(height: 20),
 
                   // Foto
                   if (widget.fotos.isNotEmpty) ...[
-                    _buildSectionTitle('Bukti Foto Meteran'),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 90,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: widget.fotos.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (_, i) => ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          child: Image.file(widget.fotos[i],
-                              width: 90, height: 90, fit: BoxFit.cover),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                    _buildPhotoCard(),
+                    const SizedBox(height: 24),
                   ],
 
-                  // Buttons
+                  // Konfirmasi & Simpan
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -242,6 +175,7 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
                       onPressed: prov.isSubmitting ? null : _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.success,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
@@ -257,9 +191,6 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.check_circle_rounded,
-                                    size: 20, color: Colors.white),
-                                const SizedBox(width: 8),
                                 Text(
                                   'KONFIRMASI & SIMPAN',
                                   style: GoogleFonts.inter(
@@ -269,21 +200,45 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
                                     color: Colors.white,
                                   ),
                                 ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.save_rounded,
+                                    size: 18, color: Colors.white),
                               ],
                             ),
                     ),
                   ),
                   const SizedBox(height: 10),
+
+                  // Kembali untuk Edit
                   SizedBox(
                     width: double.infinity,
-                    child: TextButton.icon(
+                    height: 52,
+                    child: TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                      label: Text('Kembali untuk Edit',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+                      style: TextButton.styleFrom(
+                        backgroundColor:
+                            AppTheme.pemakaianCardBg.withValues(alpha: 0.6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.edit_rounded,
+                              size: 16, color: AppTheme.textSecondary),
+                          const SizedBox(width: 8),
+                          Text('Kembali untuk Edit',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textSecondary,
+                              )),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -293,9 +248,19 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
     );
   }
 
+  // ── Header (sama seperti step1 & step2) ──
   Widget _buildHeader() {
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.headerGradient),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       padding: EdgeInsets.fromLTRB(
           16, MediaQuery.of(context).padding.top + 12, 16, 16),
       child: Column(
@@ -303,31 +268,53 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
           Row(
             children: [
               GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => Navigator.of(context).maybePop(),
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppTheme.textPrimary.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.arrow_back_rounded,
-                      color: Colors.white, size: 20),
+                      color: AppTheme.textPrimary, size: 18),
                 ),
               ),
-              const SizedBox(width: 12),
-              Text(
-                'TAGIHAN',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                  color: Colors.white.withValues(alpha: 0.85),
+              const SizedBox(width: 10),
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                child: const Icon(Icons.bolt_rounded,
+                    color: Colors.white, size: 15),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'INPUT TAGIHAN',
+                style: GoogleFonts.hankenGrotesk(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.person_rounded,
+                    color: Colors.white, size: 18),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildStepper(2),
         ],
       ),
@@ -339,8 +326,18 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
     return Row(
       children: List.generate(steps.length * 2 - 1, (i) {
         if (i.isOdd) {
+          final stepIdx = i ~/ 2;
+          final isDone = stepIdx < currentStep;
           return Expanded(
-            child: Container(height: 2, color: Colors.white),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 22),
+              child: Container(
+                height: 2,
+                color: isDone
+                    ? AppTheme.primary
+                    : AppTheme.divider.withValues(alpha: 0.7),
+              ),
+            ),
           );
         }
         final stepIdx = i ~/ 2;
@@ -349,35 +346,43 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
         return Column(
           children: [
             Container(
-              width: 28,
-              height: 28,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                color: isCompleted
+                    ? AppTheme.primary
+                    : (isActive ? AppTheme.secondary : Colors.white),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: isCompleted
+                      ? AppTheme.primary
+                      : (isActive ? AppTheme.secondary : AppTheme.divider),
+                  width: 1.4,
+                ),
               ),
               child: Center(
                 child: isCompleted
-                    ? const Icon(Icons.check,
-                        size: 16, color: AppTheme.primary)
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
                     : Text(
                         '${stepIdx + 1}',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: isActive
-                              ? AppTheme.primary
-                              : AppTheme.textMuted,
+                          color: isActive ? Colors.white : AppTheme.textMuted,
                         ),
                       ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               steps[stepIdx],
               style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: Colors.white,
+                fontSize: 12,
+                fontWeight:
+                    isActive || isCompleted ? FontWeight.w700 : FontWeight.w400,
+                color: isActive || isCompleted
+                    ? AppTheme.textPrimary
+                    : AppTheme.textMuted,
               ),
             ),
           ],
@@ -386,57 +391,259 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: AppTheme.textPrimary,
-      ),
-    );
-  }
-
-  Widget _buildSection(String title, List<Widget> children) {
+  // ── Card Lokasi Terpilih ──
+  Widget _buildLocationInfo() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.pemakaianCardBg.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.apartment_rounded,
+                size: 20, color: AppTheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${widget.area.nama} - ${widget.titikMeter.nama}',
+                  style: GoogleFonts.hankenGrotesk(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Meter ID: ${widget.titikMeter.id}',
+                  style: GoogleFonts.inter(
+                      fontSize: 12, color: AppTheme.textMuted),
+                ),
+              ],
             ),
           ),
-          const Divider(height: 16),
-          ...children,
         ],
       ),
     );
   }
 
-  Widget _reviewRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // ── Card Ringkasan Tagihan (dark navy, gabungan data meter + total estimasi) ──
+  Widget _buildRingkasanCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        color: AppTheme.heroCardBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        boxShadow: AppTheme.elevatedShadow,
+      ),
+      child: Stack(
         children: [
-          Text(label,
-              style: GoogleFonts.inter(
-                  fontSize: 13, color: AppTheme.textSecondary)),
-          Text(value,
-              style: GoogleFonts.inter(
+          Positioned(
+            right: -12,
+            bottom: -10,
+            child: Icon(
+              Icons.receipt_long_rounded,
+              size: 100,
+              color: Colors.white.withValues(alpha: 0.04),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.description_rounded,
+                      size: 16, color: AppTheme.heroCardLabel),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Ringkasan Tagihan',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _ringkasanRow('Meter Bulan Lalu',
+                  '${widget.meterLalu.toStringAsFixed(2)} m\u00b3'),
+              const SizedBox(height: 8),
+              _ringkasanRow('Meter Bulan Ini',
+                  '${widget.meterIni.toStringAsFixed(2)} m\u00b3'),
+              const SizedBox(height: 8),
+              _ringkasanRow('Pemakaian Terkoreksi',
+                  '${widget.pemakaian.toStringAsFixed(2)} m\u00b3'),
+              const SizedBox(height: 8),
+              _ringkasanRow(
+                  'Tarif / m\u00b3', _currencyFormat.format(widget.tarif)),
+              const SizedBox(height: 14),
+              Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Total Estimasi',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.heroCardLabel,
+                    ),
+                  ),
+                  Text(
+                    _currencyFormat.format(widget.estimasi),
+                    style: GoogleFonts.hankenGrotesk(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: _accentTeal,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _ringkasanRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: AppTheme.heroCardLabel,
+          ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Card Bukti Foto Meteran (light bg + badge Terlampir) ──
+  Widget _buildPhotoCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.pemakaianCardBg.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.photo_camera_back_rounded,
+                  size: 16, color: AppTheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                'Bukti Foto Meteran',
+                style: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary)),
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            child: Stack(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 140,
+                  child: PageView.builder(
+                    itemCount: widget.fotos.length,
+                    itemBuilder: (_, i) => Image.file(
+                      widget.fotos[i],
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 8,
+                  bottom: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle_rounded,
+                            size: 13, color: AppTheme.success),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Terlampir',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (widget.fotos.length > 1)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${widget.fotos.length} foto',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
