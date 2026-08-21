@@ -71,92 +71,73 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Lokasi Meter info card
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.08),
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMd),
-                      border:
-                          Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.location_on_rounded,
-                            color: AppTheme.primary, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Lokasi Meter',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  // ── Card: Lokasi Meter ──
+                  _buildSectionCard(
+                    icon: Icons.location_on_rounded,
+                    title: 'Lokasi Meter',
+                    children: [
+                      _buildLabel('Pilih Area'),
+                      const SizedBox(height: 8),
+                      _buildDropdown<Area>(
+                        hint: 'Pilih Area Operasional',
+                        value: _selectedArea,
+                        items: master.areas,
+                        itemLabel: (a) => a.nama,
+                        onChanged: (a) {
+                          setState(() {
+                            _selectedArea = a;
+                            _selectedTitikMeter = null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabel('Pilih Titik Meter'),
+                      const SizedBox(height: 8),
+                      _buildDropdown<TitikMeter>(
+                        hint: _selectedArea == null
+                            ? 'Pilih area terlebih dahulu'
+                            : 'Pilih Titik Metering',
+                        value: _selectedTitikMeter,
+                        items: filteredTitikMeter,
+                        itemLabel: (tm) => tm.nama,
+                        onChanged: _selectedArea == null
+                            ? null
+                            : (tm) => setState(() => _selectedTitikMeter = tm),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                  // Pilih Area
-                  _buildLabel('Pilih Area Operasional'),
-                  const SizedBox(height: 8),
-                  _buildDropdown<Area>(
-                    hint: 'Pilih Area Operasional',
-                    value: _selectedArea,
-                    items: master.areas,
-                    itemLabel: (a) => a.nama,
-                    onChanged: (a) {
-                      setState(() {
-                        _selectedArea = a;
-                        _selectedTitikMeter = null;
-                      });
-                    },
+                  // ── Card: Periode Tagihan ──
+                  _buildSectionCard(
+                    icon: Icons.calendar_today_rounded,
+                    title: 'Periode Tagihan',
+                    children: [
+                      _buildLabel('Pilih Periode'),
+                      const SizedBox(height: 8),
+                      _buildPeriodePicker(),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-
-                  // Pilih Titik Meter
-                  _buildLabel('Pilih Titik Meter'),
-                  const SizedBox(height: 8),
-                  _buildDropdown<TitikMeter>(
-                    hint: _selectedArea == null
-                        ? 'Pilih area terlebih dahulu'
-                        : 'Pilih Titik Meteran',
-                    value: _selectedTitikMeter,
-                    items: filteredTitikMeter,
-                    itemLabel: (tm) => tm.nama,
-                    onChanged: _selectedArea == null
-                        ? null
-                        : (tm) => setState(() => _selectedTitikMeter = tm),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Periode Tagihan
-                  _buildLabel('Periode Tagihan'),
-                  const SizedBox(height: 8),
-                  _buildPeriodePicker(),
-                  const SizedBox(height: 8),
-                  _buildLabel('Pilih Bulan & Tahun', isSmall: true),
                   const SizedBox(height: 24),
 
                   // Lanjut button
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 52,
                     child: ElevatedButton(
                       onPressed: _canNext ? _next : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _canNext
                             ? AppTheme.primary
-                            : AppTheme.primary.withValues(alpha: 0.3),
+                            : AppTheme.textMuted.withValues(alpha: 0.4),
+                        disabledBackgroundColor:
+                            AppTheme.textMuted.withValues(alpha: 0.4),
                         foregroundColor: Colors.white,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
@@ -172,7 +153,7 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           const Icon(Icons.arrow_forward_rounded, size: 18),
                         ],
                       ),
@@ -187,59 +168,62 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
     );
   }
 
+  // ── Header: putih bersih, ikon petir + judul, avatar kanan, stepper putus-putus ──
   Widget _buildHeader() {
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.headerGradient),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       padding: EdgeInsets.fromLTRB(
           16, MediaQuery.of(context).padding.top + 12, 16, 16),
       child: Column(
         children: [
-          // Top row
           Row(
             children: [
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.arrow_back_rounded,
-                      color: Colors.white, size: 20),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                child: const Icon(Icons.bolt_rounded,
+                    color: Colors.white, size: 18),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Text(
-                'TAGIHAN',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
+                'INPUT TAGIHAN',
+                style: GoogleFonts.hankenGrotesk(
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                  color: Colors.white.withValues(alpha: 0.85),
+                  letterSpacing: 0.4,
+                  color: AppTheme.textPrimary,
                 ),
               ),
               const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                ),
-                child: Text(
-                  '+ Input Meter',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+              GestureDetector(
+                onTap: () => Navigator.of(context).maybePop(),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.secondary,
+                    shape: BoxShape.circle,
                   ),
+                  child: const Icon(Icons.person_rounded,
+                      color: Colors.white, size: 16),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           // Stepper
           _buildStepper(0),
         ],
@@ -252,14 +236,14 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
     return Row(
       children: List.generate(steps.length * 2 - 1, (i) {
         if (i.isOdd) {
-          // Connector line
+          // Connector: garis putus-putus
           final stepIdx = i ~/ 2;
+          final isDone = stepIdx < currentStep;
           return Expanded(
-            child: Container(
-              height: 2,
-              color: stepIdx < currentStep
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.3),
+            child: _DashedLine(
+              color: isDone
+                  ? AppTheme.primary
+                  : AppTheme.divider.withValues(alpha: 0.6),
             ),
           );
         }
@@ -269,43 +253,87 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
         return Column(
           children: [
             Container(
-              width: 28,
-              height: 28,
+              width: 26,
+              height: 26,
               decoration: BoxDecoration(
                 color: isActive || isCompleted
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.25),
+                    ? AppTheme.secondary
+                    : Colors.white,
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: isActive || isCompleted
+                      ? AppTheme.secondary
+                      : AppTheme.divider,
+                  width: 1.4,
+                ),
               ),
               child: Center(
                 child: isCompleted
-                    ? const Icon(Icons.check, size: 16, color: AppTheme.primary)
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
                     : Text(
                         '${stepIdx + 1}',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: isActive
-                              ? AppTheme.primary
-                              : Colors.white.withValues(alpha: 0.6),
+                              ? Colors.white
+                              : AppTheme.textMuted,
                         ),
                       ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               steps[stepIdx],
               style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
                 color: isActive || isCompleted
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.5),
+                    ? AppTheme.textPrimary
+                    : AppTheme.textMuted,
               ),
             ),
           ],
         );
       }),
+    );
+  }
+
+  // ── Card pembungkus tiap section (Lokasi Meter / Periode Tagihan) ──
+  Widget _buildSectionCard({
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.pemakaianCardBg.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppTheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
     );
   }
 
@@ -413,7 +441,7 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                displayText.isEmpty ? 'Pilih Periode' : displayText,
+                displayText.isEmpty ? 'Pilih Bulan & Tahun' : displayText,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: displayText.isEmpty
@@ -427,6 +455,37 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Garis putus-putus untuk connector stepper ──
+class _DashedLine extends StatelessWidget {
+  final Color color;
+  const _DashedLine({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const dashWidth = 4.0;
+        const dashSpace = 4.0;
+        final dashCount =
+            (constraints.maxWidth / (dashWidth + dashSpace)).floor();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 22), // sejajar tengah lingkaran
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(dashCount, (_) {
+              return SizedBox(
+                width: dashWidth,
+                height: 1.4,
+                child: DecoratedBox(decoration: BoxDecoration(color: color)),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 }
