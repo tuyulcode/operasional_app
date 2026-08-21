@@ -3,22 +3,30 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ── Brand Colors (sesuai Figma) ──
-  static const Color primary = Color(0xFF0D9488);
-  static const Color primaryDark = Color(0xFF0F766E);
+  static const Color primary = Color(0xFF006A61);
+  static const Color primaryDark = Color(0xFF00504A);
   static const Color primaryLight = Color(0xFF5EEAD4);
-  static const Color secondary = Color(0xFF1E293B);
+  static const Color secondary = Color(0xFF08152E);
   static const Color accent = Color(0xFF06B6D4);
 
   // ── Backgrounds ──
-  static const Color scaffoldBg = Color(0xFFF1F5F9);
+  static const Color scaffoldBg = Color(0xFFF8F9FF);
   static const Color cardBg = Color(0xFFFFFFFF);
-  static const Color surfaceDark = Color(0xFF0F172A);
+  static const Color surfaceDark = Color(0xFF08152E);
 
   // ── Text Colors ──
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
+  static const Color textPrimary = Color(0xFF0B1C30);
+  static const Color textSecondary = Color(0xFF45464D);
   static const Color textMuted = Color(0xFF94A3B8);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
+  static const Color divider = Color(0xFFC5C6CE);
+
+  // ── Dashboard Hero Card (Total Tagihan) ──
+  static const Color heroCardBg = Color(0xFF1E2A44);
+  static const Color heroCardLabel = Color(0xFFBAC6E7);
+  static const Color heroCardValue = Color(0xFF8591B0);
+  static const Color trendPositive = Color(0xFF69F9E6);
+  static const Color pemakaianCardBg = Color(0xFFDCE9FF);
 
   // ── Status Colors ──
   static const Color success = Color(0xFF10B981);

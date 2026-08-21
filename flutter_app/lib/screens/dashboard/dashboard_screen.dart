@@ -6,6 +6,7 @@ import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../models/dashboard_stats.dart';
+import '../input_tagihan/input_step1_screen.dart';
 import '../profile/profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -54,6 +55,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 16),
+                    _buildQuickActionsHeader(),
+                    const SizedBox(height: 20),
                     _buildSummaryCards(dashProv.stats!),
                     const SizedBox(height: 20),
                     _buildProgressCard(dashProv.stats!),
@@ -72,46 +75,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHeader(AuthProvider auth) {
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.headerGradient),
+      decoration: BoxDecoration(
+        color: AppTheme.scaffoldBg.withValues(alpha: 0.98),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       padding: EdgeInsets.fromLTRB(
-          20, MediaQuery.of(context).padding.top + 16, 20, 24),
+          16, MediaQuery.of(context).padding.top, 16, 0),
+      height: MediaQuery.of(context).padding.top + 64,
       child: Row(
         children: [
           // Logo
           Container(
-            width: 42,
-            height: 42,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              color: AppTheme.secondary,
+              borderRadius: BorderRadius.circular(2),
             ),
-            child: const Icon(Icons.water_drop_rounded,
-                color: Colors.white, size: 22),
+            child: const Icon(Icons.bolt_rounded,
+                color: Colors.white, size: 18),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'NUSANTARA POWER',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Dashboard',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
+            child: Text(
+              'NUSANTARA POWER',
+              style: GoogleFonts.hankenGrotesk(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.4,
+                color: AppTheme.textPrimary,
+              ),
             ),
           ),
           // Profile button
@@ -120,20 +119,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
               MaterialPageRoute(builder: (_) => const ProfileScreen()),
             ),
             child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                color: AppTheme.secondary,
+                shape: BoxShape.circle,
               ),
-              child: auth.user?.photoUrl != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(auth.user!.photoUrl!,
-                          fit: BoxFit.cover),
+              child: auth.user?.photoUrl != null &&
+                      auth.user!.photoUrl!.isNotEmpty
+                  ? ClipOval(
+                      child: Image.network(
+                        auth.user!.photoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.person_rounded,
+                                color: Colors.white, size: 16),
+                      ),
                     )
                   : const Icon(Icons.person_rounded,
-                      color: Colors.white, size: 22),
+                      color: Colors.white, size: 16),
             ),
           ),
         ],
@@ -141,26 +145,222 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSummaryCards(DashboardStats stats) {
+  Widget _buildQuickActionsHeader() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          child: _SummaryCard(
-            icon: Icons.receipt_long_rounded,
-            iconColor: AppTheme.primary,
-            label: 'TOTAL TAGIHAN (EST)',
-            value: _currencyFormat.format(stats.totalTagihan),
-            subtitle: stats.periodeLabel,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Dashboard',
+                style: GoogleFonts.hankenGrotesk(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Ringkasan Bulan Ini',
+                style: GoogleFonts.hankenGrotesk(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _SummaryCard(
-            icon: Icons.water_drop_rounded,
-            iconColor: AppTheme.accent,
-            label: 'TOTAL PEMAKAIAN',
-            value: '${NumberFormat('#,##0', 'id_ID').format(stats.totalPemakaian)} m³',
-            subtitle: stats.periodeLabel,
+        GestureDetector(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const InputStep1Screen()),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.primary,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: AppTheme.cardShadow,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.add_rounded, color: Colors.white, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  'Input Meter',
+                  style: GoogleFonts.hankenGrotesk(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCards(DashboardStats stats) {
+    return Column(
+      children: [
+        // ── Total Tagihan (hero card, dark) ──
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          clipBehavior: Clip.hardEdge,
+          decoration: BoxDecoration(
+            color: AppTheme.heroCardBg,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            boxShadow: AppTheme.elevatedShadow,
+          ),
+          child: Stack(
+            children: [
+              // Decorative watermark icon
+              Positioned(
+                right: -12,
+                bottom: -10,
+                child: Icon(
+                  Icons.receipt_long_rounded,
+                  size: 96,
+                  color: Colors.white.withValues(alpha: 0.04),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.credit_card_rounded,
+                          size: 15, color: AppTheme.heroCardLabel),
+                      const SizedBox(width: 8),
+                      Text(
+                        'TOTAL TAGIHAN (EST)',
+                        style: GoogleFonts.hankenGrotesk(
+                          fontSize: 12,
+                          letterSpacing: 0.8,
+                          color: AppTheme.heroCardLabel,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _currencyFormat.format(stats.totalTagihan),
+                    style: GoogleFonts.hankenGrotesk(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.heroCardValue,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.trending_up_rounded,
+                          size: 12, color: AppTheme.trendPositive),
+                      const SizedBox(width: 4),
+                      Text(
+                        '+5.2% vs Bulan Lalu',
+                        style: GoogleFonts.hankenGrotesk(
+                          fontSize: 11,
+                          color: AppTheme.trendPositive,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // ── Total Pemakaian (light card) ──
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          clipBehavior: Clip.hardEdge,
+          decoration: BoxDecoration(
+            color: AppTheme.pemakaianCardBg,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: Stack(
+            children: [
+              // Decorative watermark icon
+              Positioned(
+                right: -10,
+                top: -10,
+                child: Transform.rotate(
+                  angle: 0.2,
+                  child: Icon(
+                    Icons.water_drop_rounded,
+                    size: 100,
+                    color: AppTheme.textPrimary.withValues(alpha: 0.1),
+                  ),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.water_drop_rounded,
+                          size: 15, color: AppTheme.textSecondary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'TOTAL PEMAKAIAN AIR',
+                        style: GoogleFonts.hankenGrotesk(
+                          fontSize: 12,
+                          letterSpacing: 0.8,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: NumberFormat('#,##0', 'id_ID')
+                              .format(stats.totalPemakaian),
+                          style: GoogleFonts.hankenGrotesk(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' m³',
+                          style: GoogleFonts.hankenGrotesk(
+                            fontSize: 18,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.trending_down_rounded,
+                          size: 12, color: AppTheme.textSecondary),
+                      const SizedBox(width: 4),
+                      Text(
+                        '-1.1% vs Bulan Lalu',
+                        style: GoogleFonts.hankenGrotesk(
+                          fontSize: 11,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ],
@@ -326,74 +526,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 // ── Reusable sub-widgets ──
-
-class _SummaryCard extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String value;
-  final String subtitle;
-
-  const _SummaryCard({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: iconColor),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                    color: AppTheme.textSecondary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              color: AppTheme.textMuted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _QuickStat extends StatelessWidget {
   final IconData icon;
