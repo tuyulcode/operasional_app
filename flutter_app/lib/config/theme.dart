@@ -183,6 +183,11 @@ class AppTheme {
           fontWeight: FontWeight.w400,
         ),
       ),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFFEFF1F5),
+        thickness: 1,
+        space: 1,
+      ),
     );
   }
 }
