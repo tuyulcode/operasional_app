@@ -7,6 +7,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/storage_service.dart';
 import 'main_shell.dart';
+import 'profile/profile_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -103,18 +104,10 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _showForgotPasswordHint() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppTheme.secondary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        ),
-        content: Text(
-          'Hubungi admin operasional untuk reset password.',
-          style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
-        ),
+  void _goToForgotPasswordHelp() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const ProfileScreen(openHelp: true),
       ),
     );
   }
@@ -346,7 +339,7 @@ class _LoginScreenState extends State<LoginScreen>
                                             ),
                                             const Spacer(),
                                             GestureDetector(
-                                              onTap: _showForgotPasswordHint,
+                                              onTap: _goToForgotPasswordHelp,
                                               child: Text(
                                                 'Lupa password?',
                                                 style: GoogleFonts.inter(
