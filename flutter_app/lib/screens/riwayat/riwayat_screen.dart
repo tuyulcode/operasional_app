@@ -1378,12 +1378,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                             _currencyFormat.format(t.jumlah),
                           ),
 
-                          _buildDetailRow(
-                            'Dokumentasi',
-                            t.fotos.isEmpty
-                                ? 'Tidak ada foto'
-                                : '${t.fotos.length} foto',
-                          ),
+                          const SizedBox(height: 4),
+
+                          _buildDokumentasiSection(t),
                         ],
                       ),
                     ),
@@ -1394,6 +1391,169 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // FOTO / DOKUMENTASI
+  // ============================================================
+
+  Widget _buildDokumentasiSection(TagihanAir t) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 7),
+          child: Text(
+            'Dokumentasi',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              color: const Color(0xFF7C8696),
+            ),
+          ),
+        ),
+
+        if (t.fotos.isEmpty)
+          Text(
+            'Tidak ada foto',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1C2940),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(t.fotos.length, (index) {
+              final foto = t.fotos[index];
+              return GestureDetector(
+                onTap: () => _openFotoViewer(t.fotos, index),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    color: const Color(0xFFF0F2F5),
+                    child: Image.network(
+                      foto.url,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return const Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.broken_image_outlined,
+                          size: 22,
+                          color: Color(0xFF9AA4B2),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+      ],
+    );
+  }
+
+  void _openFotoViewer(List<TagihanAirFoto> fotos, int initialIndex) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.92),
+      builder: (ctx) {
+        final pageController = PageController(initialPage: initialIndex);
+        int currentIndex = initialIndex;
+
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return Stack(
+              children: [
+                PageView.builder(
+                  controller: pageController,
+                  itemCount: fotos.length,
+                  onPageChanged: (i) {
+                    setDialogState(() {
+                      currentIndex = i;
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    return InteractiveViewer(
+                      minScale: 1,
+                      maxScale: 4,
+                      child: Center(
+                        child: Image.network(
+                          fotos[index].url,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.broken_image_outlined,
+                              size: 48,
+                              color: Colors.white54,
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                Positioned(
+                  top: MediaQuery.of(ctx).padding.top + 8,
+                  right: 12,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                ),
+
+                if (fotos.length > 1)
+                  Positioned(
+                    bottom: MediaQuery.of(ctx).padding.bottom + 18,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${currentIndex + 1} / ${fotos.length}',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
