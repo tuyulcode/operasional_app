@@ -168,7 +168,7 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
     );
   }
 
-  // ── Header: putih bersih, ikon petir + judul, avatar kanan, stepper putus-putus ──
+  // ── Header: putih bersih, tombol back + ikon petir + judul, avatar kanan, stepper putus-putus ──
   Widget _buildHeader() {
     return Container(
       decoration: BoxDecoration(
@@ -187,6 +187,20 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
         children: [
           Row(
             children: [
+              GestureDetector(
+                onTap: () => Navigator.of(context).maybePop(),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppTheme.textMuted.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.arrow_back_rounded,
+                      size: 18, color: AppTheme.textPrimary),
+                ),
+              ),
+              const SizedBox(width: 10),
               Container(
                 width: 32,
                 height: 32,
