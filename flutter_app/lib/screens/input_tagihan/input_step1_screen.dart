@@ -5,6 +5,7 @@ import '../../config/theme.dart';
 import '../../models/area.dart';
 import '../../models/titik_meter.dart';
 import '../../providers/master_data_provider.dart';
+import '../../screens/profile/profile_screen.dart';
 import 'input_step2_screen.dart';
 
 class InputStep1Screen extends StatefulWidget {
@@ -222,8 +223,15 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
                 ),
               ),
               const Spacer(),
+              // Menu profil — tap untuk membuka ProfileScreen
               GestureDetector(
-                onTap: () => Navigator.of(context).maybePop(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ProfileScreen(),
+                    ),
+                  );
+                },
                 child: Container(
                   width: 32,
                   height: 32,
