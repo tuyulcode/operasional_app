@@ -8,6 +8,7 @@ import '../../models/area.dart';
 import '../../models/titik_meter.dart';
 import '../../providers/tagihan_provider.dart';
 import '../main_shell.dart';
+import '../../screens/profile/profile_screen.dart';
 
 class InputStep3Screen extends StatefulWidget {
   final Area area;
@@ -302,15 +303,25 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
                 ),
               ),
               const Spacer(),
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  shape: BoxShape.circle,
+              // Menu profil — tap untuk membuka ProfileScreen
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ProfileScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person_rounded,
+                      color: Colors.white, size: 18),
                 ),
-                child: const Icon(Icons.person_rounded,
-                    color: Colors.white, size: 18),
               ),
             ],
           ),
