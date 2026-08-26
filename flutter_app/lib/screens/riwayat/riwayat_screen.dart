@@ -69,31 +69,47 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   void _loadData() {
     context.read<TagihanProvider>().loadTagihan(
           areaId: _selectedAreaId,
-          bulan: _selectedBulan,
           search: _searchController.text,
         );
-
-    setState(() {
-      _showAll = false;
-    });
   }
 
   void _onSearch(String value) {
     context.read<TagihanProvider>().loadTagihan(
           areaId: _selectedAreaId,
-          bulan: _selectedBulan,
           search: value,
         );
+  }
 
+  bool get _hasActiveFilter =>
+      _selectedAreaId != null ||
+      _selectedBulan != null ||
+      _selectedTahun != null ||
+      _selectedTitikMeter != null;
+
+  void _resetAllFilters() {
     setState(() {
-      _showAll = false;
+      _selectedAreaId = null;
+      _selectedBulan = null;
+      _selectedTahun = null;
+      _selectedTitikMeter = null;
     });
+    _loadData();
   }
 
   List<TagihanAir> _getFilteredTagihans(
     List<TagihanAir> tagihans,
   ) {
     var result = List<TagihanAir>.from(tagihans);
+
+    // Filter bulan (matched client-side against the period label, e.g.
+    // "Agustus 2026" — the backend only accepts a combined "YYYY-MM"
+    // value, which this screen doesn't have since Bulan and Tahun are
+    // picked independently).
+    if (_selectedBulan != null) {
+      result = result.where((t) {
+        return t.periodeLabel.contains(_selectedBulan!);
+      }).toList();
+    }
 
     // Filter tahun
     if (_selectedTahun != null) {
@@ -191,6 +207,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
           children: [
             _buildHeader(),
 
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: _buildFilterRow(allTagihans),
+            ),
+
+            const SizedBox(height: 12),
+
             Expanded(
               child: RefreshIndicator(
                 color: AppTheme.primary,
@@ -210,15 +233,11 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                                 const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.fromLTRB(
                               16,
-                              14,
+                              0,
                               16,
                               28,
                             ),
                             children: [
-                              _buildFilterRow(allTagihans),
-
-                              const SizedBox(height: 16),
-
                               _buildSummary(
                                 totalTagihan,
                                 totalPemakaian,
@@ -235,7 +254,19 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                               ),
 
                               if (filteredTagihans.length > 5) ...[
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 8),
+                                Center(
+                                  child: Text(
+                                    _showAll
+                                        ? 'Menampilkan semua ${filteredTagihans.length} data'
+                                        : 'Menampilkan 5 dari ${filteredTagihans.length} data',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      color: AppTheme.textMuted,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 _buildLoadMoreButton(),
                               ],
                             ],
@@ -330,6 +361,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             ),
             child: TextField(
               controller: _searchController,
+              onChanged: (_) => setState(() {}),
               onSubmitted: _onSearch,
               style: GoogleFonts.inter(
                 fontSize: 12,
@@ -346,23 +378,20 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   size: 18,
                   color: Color(0xFF566276),
                 ),
-                suffixIcon: GestureDetector(
-                  onTap: _showFilterSheet,
-                  child: Container(
-                    margin: const EdgeInsets.all(4),
-                    width: 34,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF62D6C7)
-                          .withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.tune_rounded,
-                      size: 18,
-                      color: Color(0xFF009B8D),
-                    ),
-                  ),
-                ),
+                suffixIcon: _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: Color(0xFF8A93A3),
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearch('');
+                          setState(() {});
+                        },
+                      ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 11,
@@ -388,42 +417,93 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
     return SizedBox(
       height: 32,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        children: [
-          _buildDropdownFilter(
-            label: _selectedBulan ?? 'Bulan',
-            selected: _selectedBulan != null,
-            onTap: _showMonthFilter,
-          ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            // ConstrainedBox memaksa lebar minimum row = lebar layar,
+            // sehingga saat chip muat, Row akan center di tengah;
+            // saat kepanjangan, tetap bisa discroll normal.
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: constraints.maxWidth,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildDropdownFilter(
+                    label: _selectedBulan ?? 'Bulan',
+                    selected: _selectedBulan != null,
+                    onTap: _showMonthFilter,
+                  ),
 
-          const SizedBox(width: 8),
+                  const SizedBox(width: 8),
 
-          _buildDropdownFilter(
-            label: _selectedTahun ?? 'Tahun',
-            selected: _selectedTahun != null,
-            onTap: () => _showYearFilter(years),
-          ),
+                  _buildDropdownFilter(
+                    label: _selectedTahun ?? 'Tahun',
+                    selected: _selectedTahun != null,
+                    onTap: () => _showYearFilter(years),
+                  ),
 
-          const SizedBox(width: 8),
+                  const SizedBox(width: 8),
 
-          _buildDropdownFilter(
-            label: _getSelectedAreaName(),
-            selected: _selectedAreaId != null,
-            onTap: _showAreaFilter,
-          ),
+                  _buildDropdownFilter(
+                    label: _getSelectedAreaName(),
+                    selected: _selectedAreaId != null,
+                    onTap: _showAreaFilter,
+                  ),
 
-          const SizedBox(width: 8),
+                  const SizedBox(width: 8),
 
-          _buildDropdownFilter(
-            label: _selectedTitikMeter ?? 'Titik Meter',
-            selected: _selectedTitikMeter != null,
-            onTap: () => _showTitikMeterFilter(
-              titikMeters,
+                  _buildDropdownFilter(
+                    label: _selectedTitikMeter ?? 'Titik Meter',
+                    selected: _selectedTitikMeter != null,
+                    onTap: () => _showTitikMeterFilter(
+                      titikMeters,
+                    ),
+                  ),
+
+                  if (_hasActiveFilter) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _resetAllFilters,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                        ),
+                        height: 32,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppTheme.error.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.error.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.close_rounded,
+                                size: 13, color: AppTheme.error),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Reset',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -1026,6 +1106,11 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     );
   }
 
+  // ------------------------------------------------------------
+  // FIXED: sheet sekarang menggunakan isScrollControlled + tinggi
+  // dibatasi (ConstrainedBox) + daftar item dibungkus SingleChild-
+  // ScrollView agar tidak overflow saat item banyak (mis. 12 bulan).
+  // ------------------------------------------------------------
   void _showSelectionSheet({
     required String title,
     required List<String> items,
@@ -1035,75 +1120,90 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(18),
         ),
       ),
       builder: (ctx) {
+        final maxHeight = MediaQuery.of(ctx).size.height * 0.75;
+
         return SafeArea(
-          child: Padding(
-            padding:
-                const EdgeInsets.fromLTRB(
-              18,
-              12,
-              18,
-              18,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 38,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD5D9E0),
-                      borderRadius:
-                          BorderRadius.circular(4),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                18,
+                12,
+                18,
+                18,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD5D9E0),
+                        borderRadius:
+                            BorderRadius.circular(4),
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF17233D),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                if (selected != null)
-                  _buildSelectionItem(
-                    label: 'Semua',
-                    selected: false,
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      onSelected(null);
-                    },
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF17233D),
+                    ),
                   ),
 
-                ...items.map(
-                  (item) => _buildSelectionItem(
-                    label: item,
-                    selected:
-                        selected == item,
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      onSelected(item);
-                    },
-                  ),
-                ),
+                  const SizedBox(height: 10),
 
-                const SizedBox(height: 8),
-              ],
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          if (selected != null)
+                            _buildSelectionItem(
+                              label: 'Semua',
+                              selected: false,
+                              onTap: () {
+                                Navigator.pop(ctx);
+                                onSelected(null);
+                              },
+                            ),
+
+                          ...items.map(
+                            (item) => _buildSelectionItem(
+                              label: item,
+                              selected:
+                                  selected == item,
+                              onTap: () {
+                                Navigator.pop(ctx);
+                                onSelected(item);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
         );
@@ -1163,41 +1263,37 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 
   // ============================================================
-  // FILTER BUTTON
+  // DETAIL
   // ============================================================
 
-  void _showFilterSheet() {
-    final master =
-        context.read<MasterDataProvider>();
-
+  // FIXED: sama seperti filter sheet, dibungkus isScrollControlled +
+  // ConstrainedBox + SingleChildScrollView supaya tidak overflow
+  // kalau daftar detail cukup panjang (mis. layar HP pendek / font besar).
+  void _showDetail(TagihanAir t) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
       isScrollControlled: true,
-      shape:
-          const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),
         ),
       ),
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            return Padding(
-              padding:
-                  EdgeInsets.fromLTRB(
+        final maxHeight = MediaQuery.of(ctx).size.height * 0.85;
+
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
                 18,
                 12,
                 18,
-                MediaQuery.of(ctx)
-                        .viewInsets
-                        .bottom +
-                    20,
+                22,
               ),
               child: Column(
-                mainAxisSize:
-                    MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
                 children: [
@@ -1205,15 +1301,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                     child: Container(
                       width: 38,
                       height: 4,
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            const Color(
-                          0xFFD5D9E0,
-                        ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD5D9E0),
                         borderRadius:
-                            BorderRadius
-                                .circular(4),
+                            BorderRadius.circular(4),
                       ),
                     ),
                   ),
@@ -1221,354 +1312,86 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   const SizedBox(height: 16),
 
                   Text(
-                    'Filter Riwayat',
-                    style:
-                        GoogleFonts.inter(
+                    t.periodeLabel,
+                    style: GoogleFonts.inter(
                       fontSize: 16,
-                      fontWeight:
-                          FontWeight.w700,
-                      color:
-                          const Color(
-                        0xFF17233D,
-                      ),
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF17233D),
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 4),
 
                   Text(
-                    'Bulan',
-                    style:
-                        GoogleFonts.inter(
+                    t.areaNama,
+                    style: GoogleFonts.inter(
                       fontSize: 10,
-                      fontWeight:
-                          FontWeight.w600,
-                      color:
-                          const Color(
-                        0xFF657080,
-                      ),
+                      color: const Color(0xFF7C8696),
                     ),
                   ),
 
-                  const SizedBox(height: 7),
+                  const SizedBox(height: 16),
 
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      _buildSheetChip(
-                        'Semua',
-                        _selectedBulan ==
-                            null,
-                        () {
-                          setSheetState(
-                            () {
-                              _selectedBulan =
-                                  null;
-                            },
-                          );
-                        },
-                      ),
-                      ..._months.map(
-                        (month) =>
-                            _buildSheetChip(
-                          month,
-                          _selectedBulan ==
-                              month,
-                          () {
-                            setSheetState(
-                              () {
-                                _selectedBulan =
-                                    month;
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  Text(
-                    'Area',
-                    style:
-                        GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight:
-                          FontWeight.w600,
-                      color:
-                          const Color(
-                        0xFF657080,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 7),
-
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      _buildSheetChip(
-                        'Semua',
-                        _selectedAreaId ==
-                            null,
-                        () {
-                          setSheetState(
-                            () {
-                              _selectedAreaId =
-                                  null;
-                            },
-                          );
-                        },
-                      ),
-                      ...master.areas.map(
-                        (area) =>
-                            _buildSheetChip(
-                          area.nama,
-                          _selectedAreaId ==
-                              area.id,
-                          () {
-                            setSheetState(
-                              () {
-                                _selectedAreaId =
-                                    area.id;
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width:
-                        double.infinity,
-                    height: 44,
-                    child:
-                        ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(
-                          ctx,
-                        );
-                        _loadData();
-                      },
-                      style:
-                          ElevatedButton
-                              .styleFrom(
-                        backgroundColor:
-                            AppTheme
-                                .primary,
-                        foregroundColor:
-                            Colors.white,
-                        elevation: 0,
-                        shape:
-                            RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius
-                                  .circular(
-                            8,
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          _buildDetailRow(
+                            'Titik Meter',
+                            t.titikMeterNama,
                           ),
-                        ),
-                      ),
-                      child: Text(
-                        'Terapkan Filter',
-                        style:
-                            GoogleFonts
-                                .inter(
-                          fontSize: 11,
-                          fontWeight:
-                              FontWeight
-                                  .w600,
-                        ),
+
+                          _buildDetailRow(
+                            'Lokasi Flow Meter',
+                            t.lokasiFlowMeter ?? '-',
+                          ),
+
+                          _buildDetailRow(
+                            'Meter Sebelumnya',
+                            t.meterLalu.toStringAsFixed(0),
+                          ),
+
+                          _buildDetailRow(
+                            'Meter Saat Ini',
+                            t.meterIni.toStringAsFixed(0),
+                          ),
+
+                          _buildDetailRow(
+                            'Faktor Meter',
+                            t.meterFaktor.toStringAsFixed(2),
+                          ),
+
+                          _buildDetailRow(
+                            'Pemakaian',
+                            '${t.pemakaian.toStringAsFixed(0)} m³',
+                          ),
+
+                          _buildDetailRow(
+                            'Tarif',
+                            _currencyFormat.format(t.tarif),
+                          ),
+
+                          _buildDetailRow(
+                            'Total Tagihan',
+                            _currencyFormat.format(t.jumlah),
+                          ),
+
+                          _buildDetailRow(
+                            'Dokumentasi',
+                            t.fotos.isEmpty
+                                ? 'Tidak ada foto'
+                                : '${t.fotos.length} foto',
+                          ),
+                        ],
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 8),
                 ],
               ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildSheetChip(
-    String label,
-    bool selected,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 7,
-        ),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppTheme.primary
-              : const Color(0xFFF1F4F8),
-          borderRadius:
-              BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 9,
-            fontWeight:
-                FontWeight.w500,
-            color: selected
-                ? Colors.white
-                : const Color(
-                    0xFF3D495C,
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // DETAIL
-  // ============================================================
-
-  void _showDetail(TagihanAir t) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape:
-          const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding:
-                const EdgeInsets.fromLTRB(
-              18,
-              12,
-              18,
-              22,
-            ),
-            child: Column(
-              mainAxisSize:
-                  MainAxisSize.min,
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 38,
-                    height: 4,
-                    decoration:
-                        BoxDecoration(
-                      color: const Color(
-                        0xFFD5D9E0,
-                      ),
-                      borderRadius:
-                          BorderRadius
-                              .circular(4),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                Text(
-                  t.periodeLabel,
-                  style:
-                      GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight:
-                        FontWeight.w700,
-                    color:
-                        const Color(
-                      0xFF17233D,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  t.areaNama,
-                  style:
-                      GoogleFonts.inter(
-                    fontSize: 10,
-                    color:
-                        const Color(
-                      0xFF7C8696,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                _buildDetailRow(
-                  'Titik Meter',
-                  t.titikMeterNama,
-                ),
-
-                _buildDetailRow(
-                  'Lokasi Flow Meter',
-                  t.lokasiFlowMeter ??
-                      '-',
-                ),
-
-                _buildDetailRow(
-                  'Meter Sebelumnya',
-                  t.meterLalu
-                      .toStringAsFixed(0),
-                ),
-
-                _buildDetailRow(
-                  'Meter Saat Ini',
-                  t.meterIni
-                      .toStringAsFixed(0),
-                ),
-
-                _buildDetailRow(
-                  'Faktor Meter',
-                  t.meterFaktor
-                      .toStringAsFixed(2),
-                ),
-
-                _buildDetailRow(
-                  'Pemakaian',
-                  '${t.pemakaian.toStringAsFixed(0)} m³',
-                ),
-
-                _buildDetailRow(
-                  'Tarif',
-                  _currencyFormat.format(
-                    t.tarif,
-                  ),
-                ),
-
-                _buildDetailRow(
-                  'Total Tagihan',
-                  _currencyFormat.format(
-                    t.jumlah,
-                  ),
-                ),
-
-                _buildDetailRow(
-                  'Dokumentasi',
-                  t.fotos.isEmpty
-                      ? 'Tidak ada foto'
-                      : '${t.fotos.length} foto',
-                ),
-
-                const SizedBox(height: 8),
-              ],
             ),
           ),
         );
@@ -1655,8 +1478,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                         .circle,
                   ),
                   child: Icon(
-                    Icons
-                        .receipt_long_rounded,
+                    _hasActiveFilter
+                        ? Icons.filter_alt_off_rounded
+                        : Icons.receipt_long_rounded,
                     size: 30,
                     color: AppTheme
                         .primary
@@ -1669,7 +1493,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 const SizedBox(height: 14),
 
                 Text(
-                  'Belum ada riwayat tagihan',
+                  _hasActiveFilter
+                      ? 'Tidak ada hasil untuk filter ini'
+                      : 'Belum ada riwayat tagihan',
                   style:
                       GoogleFonts.inter(
                     fontSize: 13,
@@ -1683,7 +1509,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 const SizedBox(height: 5),
 
                 Text(
-                  'Data tagihan akan muncul di sini.',
+                  _hasActiveFilter
+                      ? 'Coba ubah atau reset filter yang aktif.'
+                      : 'Data tagihan akan muncul di sini.',
                   style:
                       GoogleFonts.inter(
                     fontSize: 10,
@@ -1691,6 +1519,29 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                         AppTheme.textMuted,
                   ),
                 ),
+
+                if (_hasActiveFilter) ...[
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: _resetAllFilters,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Reset Filter',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
