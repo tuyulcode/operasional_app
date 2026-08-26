@@ -8,6 +8,7 @@ import '../../providers/dashboard_provider.dart';
 import '../../models/dashboard_stats.dart';
 import '../input_tagihan/input_step1_screen.dart';
 import '../profile/profile_screen.dart';
+import '../riwayat/riwayat_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -95,16 +96,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppTheme.secondary,
-              borderRadius: BorderRadius.circular(2),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(5),
             ),
-            child: const Icon(Icons.bolt_rounded,
-                color: Colors.white, size: 18),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'NUSANTARA POWER',
+              'PLN NUSANTARA POWER',
               style: GoogleFonts.hankenGrotesk(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -485,12 +491,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: AppTheme.textSecondary,
               ),
             ),
-            Text(
-              'Lihat Semua',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.primary,
+            GestureDetector(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RiwayatScreen()),
+              ),
+              child: Text(
+                'Lihat Semua',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.primary,
+                ),
               ),
             ),
           ],

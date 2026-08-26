@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:month_picker_dialog/month_picker_dialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
@@ -18,6 +21,7 @@ class RiwayatScreen extends StatefulWidget {
 
 class _RiwayatScreenState extends State<RiwayatScreen> {
   final _searchController = TextEditingController();
+  Timer? _searchDebounce;
 
   final _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -60,6 +64,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -74,7 +79,22 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         );
   }
 
+  void _onSearchChanged(String value) {
+    setState(() {});
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 400),
+      () {
+        context.read<TagihanProvider>().loadTagihan(
+              areaId: _selectedAreaId,
+              search: value,
+            );
+      },
+    );
+  }
+
   void _onSearch(String value) {
+    _searchDebounce?.cancel();
     context.read<TagihanProvider>().loadTagihan(
           areaId: _selectedAreaId,
           search: value,
@@ -124,31 +144,6 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       result = result.where((t) {
         return t.titikMeterNama == _selectedTitikMeter;
       }).toList();
-    }
-
-    return result;
-  }
-
-  List<String> _getYears(List<TagihanAir> tagihans) {
-    final years = <String>{};
-
-    for (final t in tagihans) {
-      final match = RegExp(
-        r'\b(20\d{2})\b',
-      ).firstMatch(t.periodeLabel);
-
-      if (match != null) {
-        years.add(match.group(1)!);
-      }
-    }
-
-    final result = years.toList()
-      ..sort(
-        (a, b) => b.compareTo(a),
-      );
-
-    if (result.isEmpty) {
-      result.add(DateTime.now().year.toString());
     }
 
     return result;
@@ -374,7 +369,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             ),
             child: TextField(
               controller: _searchController,
-              onChanged: (_) => setState(() {}),
+              onChanged: _onSearchChanged,
               onSubmitted: _onSearch,
               style: GoogleFonts.inter(
                 fontSize: 12,
@@ -425,7 +420,6 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   Widget _buildFilterRow(
     List<TagihanAir> tagihans,
   ) {
-    final years = _getYears(tagihans);
     final titikMeters = _getTitikMeters(tagihans);
 
     return SizedBox(
@@ -446,17 +440,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildDropdownFilter(
-                    label: _selectedBulan ?? 'Bulan',
-                    selected: _selectedBulan != null,
-                    onTap: _showMonthFilter,
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  _buildDropdownFilter(
-                    label: _selectedTahun ?? 'Tahun',
-                    selected: _selectedTahun != null,
-                    onTap: () => _showYearFilter(years),
+                    label: _getSelectedPeriodeLabel(),
+                    selected:
+                        _selectedBulan != null || _selectedTahun != null,
+                    onTap: _showPeriodePicker,
                   ),
 
                   const SizedBox(width: 8),
@@ -1037,34 +1024,51 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // FILTER
   // ============================================================
 
-  void _showMonthFilter() {
-    _showSelectionSheet(
-      title: 'Pilih Bulan',
-      items: _months,
-      selected: _selectedBulan,
-      onSelected: (value) {
-        setState(() {
-          _selectedBulan = value;
-        });
+  String _getSelectedPeriodeLabel() {
+    if (_selectedBulan != null && _selectedTahun != null) {
+      return '$_selectedBulan $_selectedTahun';
+    }
 
-        _loadData();
-      },
-    );
+    return _selectedBulan ?? _selectedTahun ?? 'Periode';
   }
 
-  void _showYearFilter(
-    List<String> years,
-  ) {
-    _showSelectionSheet(
-      title: 'Pilih Tahun',
-      items: years,
-      selected: _selectedTahun,
-      onSelected: (value) {
-        setState(() {
-          _selectedTahun = value;
-        });
-      },
+  Future<void> _showPeriodePicker() async {
+    DateTime initialDate;
+
+    final bulanIndex =
+        _selectedBulan == null ? -1 : _months.indexOf(_selectedBulan!);
+
+    if (bulanIndex >= 0 && _selectedTahun != null) {
+      initialDate = DateTime(int.parse(_selectedTahun!), bulanIndex + 1);
+    } else {
+      initialDate = DateTime.now();
+    }
+
+    final picked = await showMonthPicker(
+      context: context,
+      initialDate: initialDate,
+      monthPickerDialogSettings: MonthPickerDialogSettings(
+        dialogSettings: const PickerDialogSettings(
+          locale: Locale('id'),
+          dismissible: true,
+          dialogRoundedCornersRadius: 18,
+        ),
+        headerSettings: const PickerHeaderSettings(
+          headerBackgroundColor: AppTheme.primary,
+        ),
+        dateButtonsSettings: const PickerDateButtonsSettings(
+          selectedMonthBackgroundColor: AppTheme.primary,
+          selectedMonthTextColor: Colors.white,
+        ),
+      ),
     );
+
+    if (!mounted || picked == null) return;
+
+    setState(() {
+      _selectedBulan = _months[picked.month - 1];
+      _selectedTahun = picked.year.toString();
+    });
   }
 
   void _showTitikMeterFilter(
