@@ -308,20 +308,22 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(5),
                 ),
-                child: const Icon(
-                  Icons.bolt_rounded,
-                  color: Colors.white,
-                  size: 21,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
 
               const SizedBox(width: 8),
 
               Text(
-                'NUSANTARA POWER',
+                'Riwayat Tagihan',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
