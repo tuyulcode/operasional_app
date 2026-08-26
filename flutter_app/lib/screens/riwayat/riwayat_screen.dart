@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../models/tagihan_air.dart';
 import '../../providers/master_data_provider.dart';
 import '../../providers/tagihan_provider.dart';
+import '../../screens/profile/profile_screen.dart';
 
 class RiwayatScreen extends StatefulWidget {
   const RiwayatScreen({super.key});
@@ -331,17 +332,27 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
               const Spacer(),
 
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF13213D),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.person_outline_rounded,
-                  color: Colors.white,
-                  size: 19,
+              // Menu profil — tap untuk membuka ProfileScreen
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ProfileScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF13213D),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.person_outline_rounded,
+                    color: Colors.white,
+                    size: 19,
+                  ),
                 ),
               ),
             ],
