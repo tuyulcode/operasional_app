@@ -138,7 +138,7 @@ if ($method === 'POST') {
 
     if ($meter_lalu === null) {
         // Find previous
-        $prevStmt = $pdo->prepare("SELECT meter_ini FROM tagihan_air WHERE titik_meter_id = ? AND periode < ? ORDER BY periode DESC LIMIT 1");
+        $prevStmt = $pdo->prepare("SELECT meter_ini FROM tagihan_air WHERE titik_meter_id = ? AND periode < ? ORDER BY periode DESC, id DESC LIMIT 1");
         $prevStmt->execute([$titik_meter_id, $periodeDate]);
         $prev = $prevStmt->fetch();
         if ($prev !== false && $prev['meter_ini'] !== null) {
@@ -156,7 +156,7 @@ if ($method === 'POST') {
     $now = date('Y-m-d H:i:s');
 
     if (!empty($id)) {
-        // UPDATE
+        // UPDATE — mengubah data yang sudah ada, dipilih lewat ?id= eksplisit
         $updateStmt = $pdo->prepare("
             UPDATE tagihan_air 
             SET titik_meter_id = ?, periode = ?, meter_lalu = ?, meter_ini = ?, meter_faktor = ?, tarif = ?, pemakaian = ?, jumlah = ?, updated_at = ?
@@ -166,21 +166,15 @@ if ($method === 'POST') {
         $tagihanId = $id;
         $msg = "Tagihan air berhasil diperbarui.";
     } else {
-        // INSERT (or duplicate key update)
+        // INSERT — selalu membuat baris baru, meski titik meter & periode
+        // sama dengan data yang sudah ada (satu meter boleh punya lebih
+        // dari satu tagihan di bulan yang sama).
         $insertStmt = $pdo->prepare("
             INSERT INTO tagihan_air (titik_meter_id, periode, meter_lalu, meter_ini, meter_faktor, tarif, pemakaian, jumlah, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-                meter_lalu = VALUES(meter_lalu),
-                meter_ini = VALUES(meter_ini),
-                meter_faktor = VALUES(meter_faktor),
-                tarif = VALUES(tarif),
-                pemakaian = VALUES(pemakaian),
-                jumlah = VALUES(jumlah),
-                updated_at = VALUES(updated_at)
         ");
         $insertStmt->execute([$titik_meter_id, $periodeDate, $meter_lalu, $meter_ini, $meter_faktor, $tarif, $pemakaian, $jumlah, $now, $now]);
-        $tagihanId = $pdo->lastInsertId() ?: $pdo->query("SELECT id FROM tagihan_air WHERE titik_meter_id = $titik_meter_id AND periode = '$periodeDate'")->fetchColumn();
+        $tagihanId = $pdo->lastInsertId();
         $msg = "Tagihan air berhasil ditambahkan.";
     }
 

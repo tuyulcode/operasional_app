@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +83,10 @@ class TagihanProvider extends ChangeNotifier {
       _successMessage = 'Tagihan air berhasil ditambahkan.';
       _isSubmitting = false;
       notifyListeners();
+      // Refresh the shared list so screens kept alive elsewhere (e.g.
+      // Riwayat behind an IndexedStack) see the new record immediately,
+      // without needing a manual pull-to-refresh.
+      unawaited(loadTagihan());
       return true;
     } on DioException catch (e) {
       _isSubmitting = false;
