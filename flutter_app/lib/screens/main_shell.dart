@@ -15,9 +15,11 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  final _screens = const [
-    DashboardScreen(),
-    RiwayatScreen(),
+  late final List<Widget> _screens = [
+    DashboardScreen(onLihatSemua: () {
+      setState(() => _currentIndex = 1);
+    }),
+    const RiwayatScreen(),
   ];
 
   @override

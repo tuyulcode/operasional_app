@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:month_picker_dialog/month_picker_dialog.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/area.dart';
@@ -415,22 +416,32 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
 
     return GestureDetector(
       onTap: () async {
-        final now = DateTime.now();
-        final picked = await showDatePicker(
+        DateTime initialDate;
+        if (_selectedPeriode != null) {
+          final parts = _selectedPeriode!.split('-');
+          initialDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
+        } else {
+          initialDate = DateTime.now();
+        }
+        final picked = await showMonthPicker(
           context: context,
-          initialDate: now,
-          firstDate: DateTime(2020),
-          lastDate: DateTime(2030),
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.light(primary: AppTheme.primary),
-              ),
-              child: child!,
-            );
-          },
+          initialDate: initialDate,
+          monthPickerDialogSettings: MonthPickerDialogSettings(
+            dialogSettings: const PickerDialogSettings(
+              locale: Locale('id'),
+              dismissible: true,
+              dialogRoundedCornersRadius: 18,
+            ),
+            headerSettings: const PickerHeaderSettings(
+              headerBackgroundColor: AppTheme.primary,
+            ),
+            dateButtonsSettings: const PickerDateButtonsSettings(
+              selectedMonthBackgroundColor: AppTheme.primary,
+              selectedMonthTextColor: Colors.white,
+            ),
+          ),
         );
-        if (picked != null) {
+        if (picked != null && mounted) {
           setState(() {
             _selectedPeriode =
                 '${picked.year}-${picked.month.toString().padLeft(2, '0')}';

@@ -304,7 +304,7 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
                   width: 34,
                   height: 34,
                   decoration: const BoxDecoration(
-                    color: AppTheme.primary,
+                    color: AppTheme.secondary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.person_rounded,

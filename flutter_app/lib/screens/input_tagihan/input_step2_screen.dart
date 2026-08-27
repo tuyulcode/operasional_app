@@ -295,7 +295,7 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                   width: 34,
                   height: 34,
                   decoration: const BoxDecoration(
-                    color: AppTheme.primary,
+                    color: AppTheme.secondary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.person_rounded,
