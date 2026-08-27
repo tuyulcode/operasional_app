@@ -277,11 +277,16 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(5),
                 ),
-                child: const Icon(Icons.bolt_rounded,
-                    color: Colors.white, size: 15),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Text(
@@ -307,7 +312,7 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                   width: 34,
                   height: 34,
                   decoration: const BoxDecoration(
-                    color: AppTheme.primary,
+                    color: AppTheme.secondary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.person_rounded,

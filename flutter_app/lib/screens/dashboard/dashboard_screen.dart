@@ -11,7 +11,8 @@ import '../profile/profile_screen.dart';
 import '../riwayat/riwayat_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback? onLihatSemua;
+  const DashboardScreen({super.key, this.onLihatSemua});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -492,9 +493,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const RiwayatScreen()),
-              ),
+              onTap: () {
+                if (widget.onLihatSemua != null) {
+                  widget.onLihatSemua!();
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const RiwayatScreen()),
+                  );
+                }
+              },
               child: Text(
                 'Lihat Semua',
                 style: GoogleFonts.inter(

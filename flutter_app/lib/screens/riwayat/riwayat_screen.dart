@@ -318,12 +318,12 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               const SizedBox(width: 8),
 
               Text(
-                'Riwayat Tagihan',
-                style: GoogleFonts.inter(
+                'RIWAYAT TAGIHAN',
+                style: GoogleFonts.hankenGrotesk(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
                   color: const Color(0xFF17233D),
-                  letterSpacing: -0.2,
                 ),
               ),
 
@@ -341,12 +341,12 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 child: Container(
                   width: 34,
                   height: 34,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF13213D),
-                    borderRadius: BorderRadius.circular(10),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.secondary,
+                    shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.person_outline_rounded,
+                    Icons.person_rounded,
                     color: Colors.white,
                     size: 19,
                   ),
@@ -1366,27 +1366,27 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                           ),
 
                           _buildDetailRow(
-                            'Meter Sebelumnya',
+                            'Meter Bulan Lalu',
                             t.meterLalu.toStringAsFixed(0),
                           ),
 
                           _buildDetailRow(
-                            'Meter Saat Ini',
+                            'Meter Bulan Ini',
                             t.meterIni.toStringAsFixed(0),
                           ),
 
                           _buildDetailRow(
-                            'Faktor Meter',
+                            'Meter Faktor',
                             t.meterFaktor.toStringAsFixed(2),
                           ),
 
                           _buildDetailRow(
-                            'Pemakaian',
+                            'Jumlah Pengambilan',
                             '${t.pemakaian.toStringAsFixed(0)} m³',
                           ),
 
                           _buildDetailRow(
-                            'Tarif',
+                            'Tarif / M³',
                             _currencyFormat.format(t.tarif),
                           ),
 

@@ -28,11 +28,25 @@ function format_tagihan_item($pdo, $t, $baseUrl) {
         if (str_starts_with($path, 'http')) {
             $url = $path;
         } else {
-            // Laravel public storage URL or local api upload URL
-            $url = "http://{$_SERVER['HTTP_HOST']}/operasional/public/storage/" . ltrim($path, '/');
-            // If file exists in api uploads
+            $url = null;
+
+            // 1. Cek di api/uploads (upload via API baru)
             if (file_exists(__DIR__ . '/uploads/' . $path)) {
                 $url = "{$baseUrl}/uploads/" . ltrim($path, '/');
+            }
+
+            // 2. Cek di Laravel storage lama (absolute path)
+            if ($url === null) {
+                $wwwRoot = dirname(__DIR__, 2);
+                $laravelFile = $wwwRoot . '/operasional/storage/app/public/' . $path;
+                if (file_exists($laravelFile)) {
+                    $url = "http://{$_SERVER['HTTP_HOST']}/operasional/public/storage/" . ltrim($path, '/');
+                }
+            }
+
+            // 3. Fallback — tetap generate URL (via junction mungkin bisa diakses)
+            if ($url === null) {
+                $url = "http://{$_SERVER['HTTP_HOST']}/operasional/public/storage/" . ltrim($path, '/');
             }
         }
         $fotos[] = [
