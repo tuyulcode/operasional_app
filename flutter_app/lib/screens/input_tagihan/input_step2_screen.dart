@@ -272,18 +272,6 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                       color: AppTheme.textPrimary, size: 18),
                 ),
               ),
-              const SizedBox(width: 10),
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.bolt_rounded,
-                    color: Colors.white, size: 15),
-              ),
-              const SizedBox(width: 8),
               Text(
                 'INPUT TAGIHAN',
                 style: GoogleFonts.hankenGrotesk(
