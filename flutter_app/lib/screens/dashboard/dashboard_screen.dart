@@ -19,8 +19,11 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final _currencyFormat =
-      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  final _currencyFormat = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
 
   @override
   void initState() {
@@ -49,7 +52,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (dashProv.isLoading)
               const SliverFillRemaining(
                 child: Center(
-                    child: CircularProgressIndicator(color: AppTheme.primary)),
+                  child: CircularProgressIndicator(color: AppTheme.primary),
+                ),
               )
             else if (dashProv.stats != null)
               SliverPadding(
@@ -88,7 +92,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.of(context).padding.top, 16, 0),
+        16,
+        MediaQuery.of(context).padding.top,
+        16,
+        0,
+      ),
       height: MediaQuery.of(context).padding.top + 64,
       child: Row(
         children: [
@@ -102,10 +110,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(5),
-              child: Image.asset(
-                'assets/images/logo.png',
-                fit: BoxFit.contain,
-              ),
+              child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
             ),
           ),
           const SizedBox(width: 8),
@@ -122,9 +127,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           // Profile button
           GestureDetector(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
             child: Container(
               width: 32,
               height: 32,
@@ -132,19 +137,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: AppTheme.secondary,
                 shape: BoxShape.circle,
               ),
-              child: auth.user?.photoUrl != null &&
-                      auth.user!.photoUrl!.isNotEmpty
+              child:
+                  auth.user?.photoUrl != null && auth.user!.photoUrl!.isNotEmpty
                   ? ClipOval(
                       child: Image.network(
                         auth.user!.photoUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.person_rounded,
-                                color: Colors.white, size: 16),
+                            const Icon(
+                              Icons.person_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                       ),
                     )
-                  : const Icon(Icons.person_rounded,
-                      color: Colors.white, size: 16),
+                  : const Icon(
+                      Icons.person_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
             ),
           ),
         ],
@@ -180,9 +191,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         GestureDetector(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const InputStep1Screen()),
-          ),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const InputStep1Screen())),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
@@ -241,8 +252,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.credit_card_rounded,
-                          size: 15, color: AppTheme.heroCardLabel),
+                      Icon(
+                        Icons.credit_card_rounded,
+                        size: 15,
+                        color: AppTheme.heroCardLabel,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'TOTAL TAGIHAN (EST)',
@@ -266,8 +280,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.trending_up_rounded,
-                          size: 12, color: AppTheme.trendPositive),
+                      Icon(
+                        Icons.trending_up_rounded,
+                        size: 12,
+                        color: AppTheme.trendPositive,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '+5.2% vs Bulan Lalu',
@@ -314,8 +331,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.water_drop_rounded,
-                          size: 15, color: AppTheme.textSecondary),
+                      Icon(
+                        Icons.water_drop_rounded,
+                        size: 15,
+                        color: AppTheme.textSecondary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'TOTAL PEMAKAIAN AIR',
@@ -332,8 +352,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: NumberFormat('#,##0', 'id_ID')
-                              .format(stats.totalPemakaian),
+                          text: NumberFormat(
+                            '#,##0',
+                            'id_ID',
+                          ).format(stats.totalPemakaian),
                           style: GoogleFonts.hankenGrotesk(
                             fontSize: 26,
                             fontWeight: FontWeight.w700,
@@ -353,8 +375,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.trending_down_rounded,
-                          size: 12, color: AppTheme.textSecondary),
+                      Icon(
+                        Icons.trending_down_rounded,
+                        size: 12,
+                        color: AppTheme.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '-1.1% vs Bulan Lalu',
@@ -391,8 +416,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.trending_up_rounded,
-                      color: AppTheme.primary, size: 18),
+                  Icon(
+                    Icons.trending_up_rounded,
+                    color: AppTheme.primary,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Status Input Bulan Berjalan',
@@ -405,8 +433,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -429,8 +459,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               value: progress.persen / 100,
               minHeight: 8,
               backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
           ),
           const SizedBox(height: 10),
@@ -440,12 +469,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 '${progress.sudahInput} Titik Terisi',
                 style: GoogleFonts.inter(
-                    fontSize: 12, color: AppTheme.textSecondary),
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               Text(
                 '${progress.totalTarget - progress.sudahInput} Titik Tersisa',
                 style: GoogleFonts.inter(
-                    fontSize: 12, color: AppTheme.textSecondary),
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
               ),
             ],
           ),
@@ -493,15 +526,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () {
-                if (widget.onLihatSemua != null) {
-                  widget.onLihatSemua!();
-                } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const RiwayatScreen()),
-                  );
-                }
-              },
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const RiwayatScreen(showBackButton: true),
+                ),
+              ),
               child: Text(
                 'Lihat Semua',
                 style: GoogleFonts.inter(
@@ -526,18 +555,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 'Belum ada aktivitas.',
                 style: GoogleFonts.inter(
-                    fontSize: 13, color: AppTheme.textMuted),
+                  fontSize: 13,
+                  color: AppTheme.textMuted,
+                ),
               ),
             ),
           )
         else
-          ...stats.aktivitasTerakhir.map((a) => _ActivityTile(
-                titikMeter: a.titikMeter,
-                area: a.area,
-                jumlah: _currencyFormat.format(a.jumlah),
-                status: a.status,
-                updatedAt: a.updatedAt,
-              )),
+          ...stats.aktivitasTerakhir.map(
+            (a) => _ActivityTile(
+              titikMeter: a.titikMeter,
+              area: a.area,
+              jumlah: _currencyFormat.format(a.jumlah),
+              status: a.status,
+              updatedAt: a.updatedAt,
+            ),
+          ),
       ],
     );
   }
@@ -651,8 +684,11 @@ class _ActivityTile extends StatelessWidget {
               color: AppTheme.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.check_circle_outline,
-                color: AppTheme.success, size: 20),
+            child: const Icon(
+              Icons.check_circle_outline,
+              color: AppTheme.success,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -682,8 +718,7 @@ class _ActivityTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppTheme.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
