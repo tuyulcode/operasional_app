@@ -59,118 +59,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   bottom: Radius.circular(32),
                 ),
                 child: Container(
-                  decoration:
-                      const BoxDecoration(gradient: AppTheme.headerGradient),
+                  decoration: const BoxDecoration(
+                    gradient: AppTheme.headerGradient,
+                  ),
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
                   child: Column(
-                  children: [
-                    // Top row
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.of(context).pop(),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.arrow_back_rounded,
-                                color: Colors.white, size: 20),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'PROFILE',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 2,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 36),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Avatar
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.85),
-                                width: 3),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: user?.photoUrl != null
-                              ? ClipOval(
-                                  child: Image.network(user!.photoUrl!,
-                                      fit: BoxFit.cover),
-                                )
-                              : const Icon(Icons.person_rounded,
-                                  size: 44, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      user?.username ?? '-',
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusFull),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.35)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Top row
+                      Row(
                         children: [
-                          Icon(
-                            isAdmin
-                                ? Icons.verified_rounded
-                                : Icons.badge_outlined,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            isAdmin ? 'Administrator' : 'Petugas',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'PROFILE',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 2,
+                                color: Colors.white.withValues(alpha: 0.9),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 36),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Avatar
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 88,
+                            height: 88,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                width: 3,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: user?.photoUrl != null
+                                ? ClipOval(
+                                    child: Image.network(
+                                      user!.photoUrl!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.person_rounded,
+                                    size: 44,
+                                    color: Colors.white,
+                                  ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 14),
+                      Text(
+                        user?.username ?? '-',
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusFull,
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isAdmin
+                                  ? Icons.verified_rounded
+                                  : Icons.badge_outlined,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              isAdmin ? 'Administrator' : 'Petugas',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -186,24 +200,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Info section
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 6),
+                          horizontal: 18,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusLg),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusLg,
+                          ),
                           boxShadow: AppTheme.cardShadow,
                         ),
                         child: Column(
                           children: [
-                            _infoRow(Icons.person_outline_rounded, 'Username',
-                                user?.username ?? '-', AppTheme.primary),
+                            _infoRow(
+                              Icons.person_outline_rounded,
+                              'Username',
+                              user?.username ?? '-',
+                              AppTheme.primary,
+                            ),
                             const Divider(height: 1),
-                            _infoRow(Icons.shield_outlined, 'Role',
-                                isAdmin ? 'Administrator' : 'Petugas',
-                                AppTheme.accent),
+                            _infoRow(
+                              Icons.shield_outlined,
+                              'Role',
+                              isAdmin ? 'Administrator' : 'Petugas',
+                              AppTheme.accent,
+                            ),
                             const Divider(height: 1),
-                            _infoRow(Icons.apartment_rounded, 'Organisasi',
-                                'PLN Nusantara Power', AppTheme.primaryDark),
+                            _infoRow(
+                              Icons.apartment_rounded,
+                              'Organisasi',
+                              'PLN Nusantara Power',
+                              AppTheme.primaryDark,
+                            ),
                           ],
                         ),
                       ),
@@ -226,13 +254,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusLg),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusLg,
+                          ),
                           boxShadow: AppTheme.cardShadow,
                         ),
                         child: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusLg),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusLg,
+                          ),
                           child: Column(
                             children: [
                               _ExpandableTile(
@@ -263,8 +293,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 52,
                         child: OutlinedButton.icon(
                           onPressed: () => _confirmLogout(context),
-                          icon: Icon(Icons.logout_rounded,
-                              size: 20, color: AppTheme.error),
+                          icon: Icon(
+                            Icons.logout_rounded,
+                            size: 20,
+                            color: AppTheme.error,
+                          ),
                           label: Text(
                             'Keluar Aplikasi',
                             style: GoogleFonts.inter(
@@ -274,12 +307,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: AppTheme.error.withValues(alpha: 0.06),
+                            backgroundColor: AppTheme.error.withValues(
+                              alpha: 0.06,
+                            ),
                             side: BorderSide(
-                                color: AppTheme.error.withValues(alpha: 0.35)),
+                              color: AppTheme.error.withValues(alpha: 0.35),
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusMd,
+                              ),
                             ),
                           ),
                         ),
@@ -324,15 +361,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: GoogleFonts.inter(
-                        fontSize: 11.5, color: AppTheme.textMuted)),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    color: AppTheme.textMuted,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(value,
-                    style: GoogleFonts.inter(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary)),
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -344,41 +388,126 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _confirmLogout(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        ),
-        title: Text('Keluar?',
-            style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
-        content: Text('Apakah Anda yakin ingin keluar dari aplikasi?',
-            style: GoogleFonts.inter(color: AppTheme.textSecondary)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Batal',
-                style: GoogleFonts.inter(color: AppTheme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await context.read<AuthProvider>().logout();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-            child: Text('Keluar',
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppTheme.error.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.logout_rounded,
+                  size: 26,
+                  color: AppTheme.error,
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              Text(
+                'Keluar Aplikasi?',
                 style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, color: Colors.white)),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Anda perlu login kembali untuk mengakses aplikasi.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 46,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Colors.grey.withValues(alpha: 0.3),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusMd,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Batal',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 46,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          await context.read<AuthProvider>().logout();
+                          if (context.mounted) {
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
+                              (route) => false,
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.error,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusMd,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Keluar',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
-
 }
 
 /// Inline expandable info row — tap to reveal a description
@@ -430,17 +559,23 @@ class _ExpandableTileState extends State<_ExpandableTile> {
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: Text(widget.title,
-                        style: GoogleFonts.inter(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textPrimary)),
+                    child: Text(
+                      widget.title,
+                      style: GoogleFonts.inter(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
                   ),
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        color: AppTheme.textMuted, size: 22),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppTheme.textMuted,
+                      size: 22,
+                    ),
                   ),
                 ],
               ),
