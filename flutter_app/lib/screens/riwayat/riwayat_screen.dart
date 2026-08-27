@@ -13,7 +13,12 @@ import '../../providers/tagihan_provider.dart';
 import '../../screens/profile/profile_screen.dart';
 
 class RiwayatScreen extends StatefulWidget {
-  const RiwayatScreen({super.key});
+  /// True kalau layar ini dibuka lewat push (mis. dari "Lihat Semua" di
+  /// Dashboard) sehingga butuh tombol back. False kalau diakses sebagai
+  /// tab utama dari bottom navbar.
+  final bool showBackButton;
+
+  const RiwayatScreen({super.key, this.showBackButton = false});
 
   @override
   State<RiwayatScreen> createState() => _RiwayatScreenState();
@@ -277,23 +282,45 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         children: [
           Row(
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    fit: BoxFit.contain,
+              if (widget.showBackButton) ...[
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 18,
+                      color: Color(0xFF17233D),
+                    ),
                   ),
                 ),
-              ),
-
-              const SizedBox(width: 8),
+                const SizedBox(width: 10),
+              ] else ...[
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
 
               Text(
                 'Riwayat Tagihan',
