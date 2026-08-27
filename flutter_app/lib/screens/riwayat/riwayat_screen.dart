@@ -74,31 +74,28 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   void _loadData() {
     context.read<TagihanProvider>().loadTagihan(
-          areaId: _selectedAreaId,
-          search: _searchController.text,
-        );
+      areaId: _selectedAreaId,
+      search: _searchController.text,
+    );
   }
 
   void _onSearchChanged(String value) {
     setState(() {});
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(
-      const Duration(milliseconds: 400),
-      () {
-        context.read<TagihanProvider>().loadTagihan(
-              areaId: _selectedAreaId,
-              search: value,
-            );
-      },
-    );
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      context.read<TagihanProvider>().loadTagihan(
+        areaId: _selectedAreaId,
+        search: value,
+      );
+    });
   }
 
   void _onSearch(String value) {
     _searchDebounce?.cancel();
     context.read<TagihanProvider>().loadTagihan(
-          areaId: _selectedAreaId,
-          search: value,
-        );
+      areaId: _selectedAreaId,
+      search: value,
+    );
   }
 
   bool get _hasActiveFilter =>
@@ -117,9 +114,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     _loadData();
   }
 
-  List<TagihanAir> _getFilteredTagihans(
-    List<TagihanAir> tagihans,
-  ) {
+  List<TagihanAir> _getFilteredTagihans(List<TagihanAir> tagihans) {
     var result = List<TagihanAir>.from(tagihans);
 
     // Filter bulan (matched client-side against the period label, e.g.
@@ -171,9 +166,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
     final allTagihans = tagProv.tagihans;
 
-    final filteredTagihans = _getFilteredTagihans(
-      allTagihans,
-    );
+    final filteredTagihans = _getFilteredTagihans(allTagihans);
 
     final totalTagihan = filteredTagihans.fold<double>(
       0.0,
@@ -188,12 +181,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     final visibleCount = _showAll
         ? filteredTagihans.length
         : filteredTagihans.length > 5
-            ? 5
-            : filteredTagihans.length;
+        ? 5
+        : filteredTagihans.length;
 
-    final visibleTagihans = filteredTagihans
-        .take(visibleCount)
-        .toList();
+    final visibleTagihans = filteredTagihans.take(visibleCount).toList();
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
@@ -223,50 +214,39 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                         ),
                       )
                     : filteredTagihans.isEmpty
-                        ? _buildEmpty()
-                        : ListView(
-                            physics:
-                                const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.fromLTRB(
-                              16,
-                              0,
-                              16,
-                              28,
-                            ),
-                            children: [
-                              _buildSummary(
-                                totalTagihan,
-                                totalPemakaian,
-                              ),
+                    ? _buildEmpty()
+                    : ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+                        children: [
+                          _buildSummary(totalTagihan, totalPemakaian),
 
-                              const SizedBox(height: 22),
+                          const SizedBox(height: 22),
 
-                              _buildSectionTitle(),
+                          _buildSectionTitle(),
 
-                              const SizedBox(height: 10),
+                          const SizedBox(height: 10),
 
-                              ...visibleTagihans.map(
-                                (t) => _buildTagihanCard(t),
-                              ),
+                          ...visibleTagihans.map((t) => _buildTagihanCard(t)),
 
-                              if (filteredTagihans.length > 5) ...[
-                                const SizedBox(height: 8),
-                                Center(
-                                  child: Text(
-                                    _showAll
-                                        ? 'Menampilkan semua ${filteredTagihans.length} data'
-                                        : 'Menampilkan 5 dari ${filteredTagihans.length} data',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      color: AppTheme.textMuted,
-                                    ),
-                                  ),
+                          if (filteredTagihans.length > 5) ...[
+                            const SizedBox(height: 8),
+                            Center(
+                              child: Text(
+                                _showAll
+                                    ? 'Menampilkan semua ${filteredTagihans.length} data'
+                                    : 'Menampilkan 5 dari ${filteredTagihans.length} data',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  color: AppTheme.textMuted,
                                 ),
-                                const SizedBox(height: 8),
-                                _buildLoadMoreButton(),
-                              ],
-                            ],
-                          ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildLoadMoreButton(),
+                          ],
+                        ],
+                      ),
               ),
             ),
           ],
@@ -290,9 +270,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       decoration: BoxDecoration(
         color: AppTheme.scaffoldBg,
         border: Border(
-          bottom: BorderSide(
-            color: Colors.grey.withValues(alpha: 0.08),
-          ),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.08)),
         ),
       ),
       child: Column(
@@ -333,22 +311,20 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ProfileScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
                   );
                 },
                 child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF13213D),
-                    borderRadius: BorderRadius.circular(10),
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.secondary,
+                    shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.person_outline_rounded,
+                    Icons.person_rounded,
                     color: Colors.white,
-                    size: 19,
+                    size: 16,
                   ),
                 ),
               ),
@@ -363,9 +339,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFE7F0FF),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: const Color(0xFFD0D9E8),
-              ),
+              border: Border.all(color: const Color(0xFFD0D9E8)),
             ),
             child: TextField(
               controller: _searchController,
@@ -417,9 +391,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // FILTER ROW
   // ============================================================
 
-  Widget _buildFilterRow(
-    List<TagihanAir> tagihans,
-  ) {
+  Widget _buildFilterRow(List<TagihanAir> tagihans) {
     final titikMeters = _getTitikMeters(tagihans);
 
     return SizedBox(
@@ -433,16 +405,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             // sehingga saat chip muat, Row akan center di tengah;
             // saat kepanjangan, tetap bisa discroll normal.
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: constraints.maxWidth,
-              ),
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildDropdownFilter(
                     label: _getSelectedPeriodeLabel(),
-                    selected:
-                        _selectedBulan != null || _selectedTahun != null,
+                    selected: _selectedBulan != null || _selectedTahun != null,
                     onTap: _showPeriodePicker,
                   ),
 
@@ -459,9 +428,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   _buildDropdownFilter(
                     label: _selectedTitikMeter ?? 'Titik Meter',
                     selected: _selectedTitikMeter != null,
-                    onTap: () => _showTitikMeterFilter(
-                      titikMeters,
-                    ),
+                    onTap: () => _showTitikMeterFilter(titikMeters),
                   ),
 
                   if (_hasActiveFilter) ...[
@@ -469,9 +436,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                     GestureDetector(
                       onTap: _resetAllFilters,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 11,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 11),
                         height: 32,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
@@ -483,8 +448,11 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.close_rounded,
-                                size: 13, color: AppTheme.error),
+                            Icon(
+                              Icons.close_rounded,
+                              size: 13,
+                              color: AppTheme.error,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Reset',
@@ -516,18 +484,12 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 11,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 11),
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFF14213D)
-              : const Color(0xFFE9F1FF),
+          color: selected ? const Color(0xFF14213D) : const Color(0xFFE9F1FF),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected
-                ? const Color(0xFF14213D)
-                : const Color(0xFFC8D3E5),
+            color: selected ? const Color(0xFF14213D) : const Color(0xFFC8D3E5),
           ),
         ),
         child: Row(
@@ -537,18 +499,14 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: selected
-                    ? Colors.white
-                    : const Color(0xFF24324A),
+                color: selected ? Colors.white : const Color(0xFF24324A),
               ),
             ),
             const SizedBox(width: 4),
             Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 14,
-              color: selected
-                  ? Colors.white
-                  : const Color(0xFF33415C),
+              color: selected ? Colors.white : const Color(0xFF33415C),
             ),
           ],
         ),
@@ -561,8 +519,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       return 'Area';
     }
 
-    final master =
-        context.read<MasterDataProvider>();
+    final master = context.read<MasterDataProvider>();
 
     for (final area in master.areas) {
       if (area.id == _selectedAreaId) {
@@ -577,10 +534,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // SUMMARY
   // ============================================================
 
-  Widget _buildSummary(
-    double totalTagihan,
-    double totalPemakaian,
-  ) {
+  Widget _buildSummary(double totalTagihan, double totalPemakaian) {
     final currentYear = DateTime.now().year;
 
     return Row(
@@ -588,8 +542,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         Expanded(
           child: _buildSummaryCard(
             title: 'TOTAL PEMAKAIAN',
-            value:
-                '${totalPemakaian.toStringAsFixed(0)} m³',
+            value: '${totalPemakaian.toStringAsFixed(0)} m³',
             subtitle: 'Tahun $currentYear',
             dark: true,
           ),
@@ -600,9 +553,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         Expanded(
           child: _buildSummaryCard(
             title: 'TOTAL TAGIHAN',
-            value: _formatCompactCurrency(
-              totalTagihan,
-            ),
+            value: _formatCompactCurrency(totalTagihan),
             subtitle: 'Tahun $currentYear',
             dark: false,
           ),
@@ -619,30 +570,20 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }) {
     return Container(
       height: 82,
-      padding: const EdgeInsets.fromLTRB(
-        13,
-        11,
-        10,
-        9,
-      ),
+      padding: const EdgeInsets.fromLTRB(13, 11, 10, 9),
       decoration: BoxDecoration(
-        color: dark
-            ? const Color(0xFF1D2B49)
-            : const Color(0xFFDCEAFF),
+        color: dark ? const Color(0xFF1D2B49) : const Color(0xFFDCEAFF),
         borderRadius: BorderRadius.circular(7),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(
-              alpha: 0.04,
-            ),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
@@ -651,9 +592,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               fontWeight: FontWeight.w500,
               letterSpacing: 0.4,
               color: dark
-                  ? Colors.white.withValues(
-                      alpha: 0.55,
-                    )
+                  ? Colors.white.withValues(alpha: 0.55)
                   : const Color(0xFF65738A),
             ),
           ),
@@ -667,9 +606,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             style: GoogleFonts.inter(
               fontSize: 17,
               fontWeight: FontWeight.w700,
-              color: dark
-                  ? Colors.white
-                  : const Color(0xFF17233D),
+              color: dark ? Colors.white : const Color(0xFF17233D),
             ),
           ),
 
@@ -680,9 +617,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             style: GoogleFonts.inter(
               fontSize: 9,
               color: dark
-                  ? Colors.white.withValues(
-                      alpha: 0.45,
-                    )
+                  ? Colors.white.withValues(alpha: 0.45)
                   : const Color(0xFF65738A),
             ),
           ),
@@ -732,20 +667,14 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   Widget _buildTagihanCard(TagihanAir t) {
     return Container(
-      margin: const EdgeInsets.only(
-        bottom: 10,
-      ),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(7),
-        border: Border.all(
-          color: const Color(0xFFD1D7E0),
-        ),
+        border: Border.all(color: const Color(0xFFD1D7E0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(
-              alpha: 0.025,
-            ),
+            color: Colors.black.withValues(alpha: 0.025),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -753,8 +682,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       ),
       child: IntrinsicHeight(
         child: Row(
-          crossAxisAlignment:
-              CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Accent kiri
             Container(
@@ -770,16 +698,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
             Expanded(
               child: Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(
-                  10,
-                  9,
-                  11,
-                  9,
-                ),
+                padding: const EdgeInsets.fromLTRB(10, 9, 11, 9),
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildCardHeader(t),
 
@@ -814,8 +735,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   Widget _buildCardHeader(TagihanAir t) {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           t.periodeLabel,
@@ -830,10 +750,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
         Text(
           t.areaNama,
-          style: GoogleFonts.inter(
-            fontSize: 9,
-            color: const Color(0xFF647084),
-          ),
+          style: GoogleFonts.inter(fontSize: 9, color: const Color(0xFF647084)),
         ),
       ],
     );
@@ -852,28 +769,20 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         Expanded(
           child: _buildInfoColumn(
             label: 'Pemakaian',
-            value:
-                '${t.pemakaian.toStringAsFixed(0)} m³',
+            value: '${t.pemakaian.toStringAsFixed(0)} m³',
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInfoColumn({
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoColumn({required String label, required String value}) {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 8,
-            color: const Color(0xFF8A93A3),
-          ),
+          style: GoogleFonts.inter(fontSize: 8, color: const Color(0xFF8A93A3)),
         ),
 
         const SizedBox(height: 2),
@@ -894,15 +803,11 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   Widget _buildTotalTagihan(TagihanAir t) {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Total Tagihan',
-          style: GoogleFonts.inter(
-            fontSize: 8,
-            color: const Color(0xFF8A93A3),
-          ),
+          style: GoogleFonts.inter(fontSize: 8, color: const Color(0xFF8A93A3)),
         ),
 
         const SizedBox(height: 2),
@@ -922,22 +827,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   Widget _buildCardFooter(TagihanAir t) {
     return Row(
       children: [
-        const Icon(
-          Icons.photo_outlined,
-          size: 13,
-          color: Color(0xFF7A8494),
-        ),
+        const Icon(Icons.photo_outlined, size: 13, color: Color(0xFF7A8494)),
 
         const SizedBox(width: 4),
 
         Text(
-          t.fotos.isEmpty
-              ? 'Tidak ada foto'
-              : '${t.fotos.length} foto',
-          style: GoogleFonts.inter(
-            fontSize: 8,
-            color: const Color(0xFF657080),
-          ),
+          t.fotos.isEmpty ? 'Tidak ada foto' : '${t.fotos.length} foto',
+          style: GoogleFonts.inter(fontSize: 8, color: const Color(0xFF657080)),
         ),
 
         const Spacer(),
@@ -985,18 +881,14 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFE5EEFC),
           borderRadius: BorderRadius.circular(7),
-          border: Border.all(
-            color: const Color(0xFFC9D7EC),
-          ),
+          border: Border.all(color: const Color(0xFFC9D7EC)),
         ),
         child: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                _showAll
-                    ? 'Tampilkan Lebih Sedikit'
-                    : 'Muat Lebih Banyak',
+                _showAll ? 'Tampilkan Lebih Sedikit' : 'Muat Lebih Banyak',
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -1035,8 +927,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   Future<void> _showPeriodePicker() async {
     DateTime initialDate;
 
-    final bulanIndex =
-        _selectedBulan == null ? -1 : _months.indexOf(_selectedBulan!);
+    final bulanIndex = _selectedBulan == null
+        ? -1
+        : _months.indexOf(_selectedBulan!);
 
     if (bulanIndex >= 0 && _selectedTahun != null) {
       initialDate = DateTime(int.parse(_selectedTahun!), bulanIndex + 1);
@@ -1071,9 +964,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     });
   }
 
-  void _showTitikMeterFilter(
-    List<String> titikMeters,
-  ) {
+  void _showTitikMeterFilter(List<String> titikMeters) {
     _showSelectionSheet(
       title: 'Pilih Titik Meter',
       items: titikMeters,
@@ -1087,12 +978,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 
   void _showAreaFilter() {
-    final master =
-        context.read<MasterDataProvider>();
+    final master = context.read<MasterDataProvider>();
 
-    final items = master.areas
-        .map((a) => a.nama)
-        .toList();
+    final items = master.areas.map((a) => a.nama).toList();
 
     _showSelectionSheet(
       title: 'Pilih Area',
@@ -1139,9 +1027,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       backgroundColor: Colors.white,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(18),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (ctx) {
         final maxHeight = MediaQuery.of(ctx).size.height * 0.75;
@@ -1150,16 +1036,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                18,
-                12,
-                18,
-                18,
-              ),
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
                     child: Container(
@@ -1167,8 +1047,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                       height: 4,
                       decoration: BoxDecoration(
                         color: const Color(0xFFD5D9E0),
-                        borderRadius:
-                            BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ),
@@ -1189,8 +1068,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   Flexible(
                     child: SingleChildScrollView(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (selected != null)
                             _buildSelectionItem(
@@ -1205,8 +1083,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                           ...items.map(
                             (item) => _buildSelectionItem(
                               label: item,
-                              selected:
-                                  selected == item,
+                              selected: selected == item,
                               onTap: () {
                                 Navigator.pop(ctx);
                                 onSelected(item);
@@ -1237,19 +1114,11 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        margin:
-            const EdgeInsets.only(bottom: 6),
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 11,
-        ),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFE3F6F3)
-              : const Color(0xFFF7F8FA),
-          borderRadius:
-              BorderRadius.circular(8),
+          color: selected ? const Color(0xFFE3F6F3) : const Color(0xFFF7F8FA),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
@@ -1258,9 +1127,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 label,
                 style: GoogleFonts.inter(
                   fontSize: 11,
-                  fontWeight: selected
-                      ? FontWeight.w600
-                      : FontWeight.w400,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                   color: selected
                       ? const Color(0xFF008F81)
                       : const Color(0xFF27344A),
@@ -1292,9 +1159,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       backgroundColor: Colors.white,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         final maxHeight = MediaQuery.of(ctx).size.height * 0.85;
@@ -1303,16 +1168,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                18,
-                12,
-                18,
-                22,
-              ),
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 22),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
                     child: Container(
@@ -1320,8 +1179,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                       height: 4,
                       decoration: BoxDecoration(
                         color: const Color(0xFFD5D9E0),
-                        borderRadius:
-                            BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ),
@@ -1352,13 +1210,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   Flexible(
                     child: SingleChildScrollView(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildDetailRow(
-                            'Titik Meter',
-                            t.titikMeterNama,
-                          ),
+                          _buildDetailRow('Titik Meter', t.titikMeterNama),
 
                           _buildDetailRow(
                             'Lokasi Flow Meter',
@@ -1576,27 +1430,17 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     );
   }
 
-  Widget _buildDetailRow(
-    String label,
-    String value,
-  ) {
+  Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
           Expanded(
             child: Text(
               label,
-              style:
-                  GoogleFonts.inter(
+              style: GoogleFonts.inter(
                 fontSize: 10,
-                color:
-                    const Color(
-                  0xFF7C8696,
-                ),
+                color: const Color(0xFF7C8696),
               ),
             ),
           ),
@@ -1604,15 +1448,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style:
-                  GoogleFonts.inter(
+              style: GoogleFonts.inter(
                 fontSize: 10,
-                fontWeight:
-                    FontWeight.w600,
-                color:
-                    const Color(
-                  0xFF1C2940,
-                ),
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1C2940),
               ),
             ),
           ),
@@ -1627,43 +1466,27 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   Widget _buildEmpty() {
     return ListView(
-      physics:
-          const AlwaysScrollableScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(
-          height:
-              MediaQuery.of(context)
-                      .size
-                      .height *
-                  0.55,
+          height: MediaQuery.of(context).size.height * 0.55,
           child: Center(
             child: Column(
-              mainAxisSize:
-                  MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: 68,
                   height: 68,
-                  decoration:
-                      BoxDecoration(
-                    color: AppTheme
-                        .primary
-                        .withValues(
-                      alpha: 0.08,
-                    ),
-                    shape: BoxShape
-                        .circle,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _hasActiveFilter
                         ? Icons.filter_alt_off_rounded
                         : Icons.receipt_long_rounded,
                     size: 30,
-                    color: AppTheme
-                        .primary
-                        .withValues(
-                      alpha: 0.6,
-                    ),
+                    color: AppTheme.primary.withValues(alpha: 0.6),
                   ),
                 ),
 
@@ -1673,13 +1496,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   _hasActiveFilter
                       ? 'Tidak ada hasil untuk filter ini'
                       : 'Belum ada riwayat tagihan',
-                  style:
-                      GoogleFonts.inter(
+                  style: GoogleFonts.inter(
                     fontSize: 13,
-                    fontWeight:
-                        FontWeight.w600,
-                    color: AppTheme
-                        .textPrimary,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
 
@@ -1689,11 +1509,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   _hasActiveFilter
                       ? 'Coba ubah atau reset filter yang aktif.'
                       : 'Data tagihan akan muncul di sini.',
-                  style:
-                      GoogleFonts.inter(
+                  style: GoogleFonts.inter(
                     fontSize: 10,
-                    color:
-                        AppTheme.textMuted,
+                    color: AppTheme.textMuted,
                   ),
                 ),
 
@@ -1703,7 +1521,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                     onTap: _resetAllFilters,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primary,
                         borderRadius: BorderRadius.circular(20),
