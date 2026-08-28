@@ -519,18 +519,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               'AKTIVITAS TERAKHIR',
               style: GoogleFonts.inter(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
                 color: AppTheme.textSecondary,
               ),
             ),
             GestureDetector(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const RiwayatScreen(showBackButton: true),
-                ),
-              ),
+              onTap: () {
+                if (widget.onLihatSemua != null) {
+                  widget.onLihatSemua!();
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const RiwayatScreen()),
+                  );
+                }
+              },
               child: Text(
                 'Lihat Semua',
                 style: GoogleFonts.inter(
