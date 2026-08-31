@@ -1,13 +1,23 @@
 class TagihanAirFoto {
   final int id;
-  final String url;
+  final String? url;
+  final String? photoStatus; // "ok" | "not_found" | null (data lama sebelum fix API)
 
-  TagihanAirFoto({required this.id, required this.url});
+  const TagihanAirFoto({
+    required this.id,
+    this.url,
+    this.photoStatus,
+  });
+
+  /// Apakah foto ini bisa ditampilkan (url ada & status bukan not_found)
+  bool get isAvailable =>
+      url != null && url!.isNotEmpty && photoStatus != 'not_found';
 
   factory TagihanAirFoto.fromJson(Map<String, dynamic> json) {
     return TagihanAirFoto(
       id: json['id'],
-      url: json['url'] ?? '',
+      url: json['url'],
+      photoStatus: json['photo_status'],
     );
   }
 }
