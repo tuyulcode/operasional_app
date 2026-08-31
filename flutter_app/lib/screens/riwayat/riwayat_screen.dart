@@ -1298,6 +1298,79 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // FOTO / DOKUMENTASI
   // ============================================================
 
+  /// Placeholder konsisten untuk foto yang tidak ditemukan / gagal dimuat.
+  /// Digunakan di thumbnail grid maupun full-screen viewer.
+  Widget _buildPhotoNotFound({double size = 22, bool light = false}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.image_not_supported_outlined,
+          size: size,
+          color: light ? Colors.white38 : const Color(0xFF9AA4B2),
+        ),
+        if (size >= 20) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Foto tidak\nditemukan',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 8,
+              fontWeight: FontWeight.w500,
+              color: light ? Colors.white38 : const Color(0xFF9AA4B2),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Thumbnail foto di dalam bottom-sheet detail.
+  /// Menangani 3 kasus:
+  ///   1. photoStatus == "ok" & url ada → Image.network
+  ///   2. photoStatus == "not_found" / url null → placeholder
+  ///   3. photoStatus == null (data lama) → coba load, errorBuilder fallback
+  Widget _buildFotoThumbnail(TagihanAirFoto foto) {
+    // Kasus 2: sudah diketahui foto tidak tersedia
+    if (!foto.isAvailable) {
+      return Container(
+        width: 72,
+        height: 72,
+        color: const Color(0xFFF0F2F5),
+        child: _buildPhotoNotFound(size: 22),
+      );
+    }
+
+    // Kasus 1 & 3: url ada, coba load via network
+    return Container(
+      width: 72,
+      height: 72,
+      color: const Color(0xFFF0F2F5),
+      child: Image.network(
+        foto.url!,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppTheme.primary,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          // Baik data lama (tanpa photoStatus) maupun error jaringan,
+          // tampilkan placeholder yang sama — bukan broken_image icon.
+          return _buildPhotoNotFound(size: 22);
+        },
+      ),
+    );
+  }
+
   Widget _buildDokumentasiSection(TagihanAir t) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1328,39 +1401,12 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             runSpacing: 8,
             children: List.generate(t.fotos.length, (index) {
               final foto = t.fotos[index];
+              final canOpen = foto.isAvailable;
               return GestureDetector(
-                onTap: () => _openFotoViewer(t.fotos, index),
+                onTap: canOpen ? () => _openFotoViewer(t.fotos, index) : null,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    color: const Color(0xFFF0F2F5),
-                    child: Image.network(
-                      foto.url,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, progress) {
-                        if (progress == null) return child;
-                        return const Center(
-                          child: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.broken_image_outlined,
-                          size: 22,
-                          color: Color(0xFF9AA4B2),
-                        );
-                      },
-                    ),
-                  ),
+                  child: _buildFotoThumbnail(foto),
                 ),
               );
             }),
@@ -1370,12 +1416,21 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 
   void _openFotoViewer(List<TagihanAirFoto> fotos, int initialIndex) {
+    // Filter hanya foto yang tersedia; hitung ulang index awal
+    final availableFotos = fotos.where((f) => f.isAvailable).toList();
+    if (availableFotos.isEmpty) return;
+
+    // Cari index foto yang diklik di daftar available
+    final originalFoto = fotos[initialIndex];
+    final startIdx = availableFotos.indexOf(originalFoto);
+    final safeStart = startIdx >= 0 ? startIdx : 0;
+
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.92),
       builder: (ctx) {
-        final pageController = PageController(initialPage: initialIndex);
-        int currentIndex = initialIndex;
+        final pageController = PageController(initialPage: safeStart);
+        int currentIndex = safeStart;
 
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
@@ -1383,28 +1438,43 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               children: [
                 PageView.builder(
                   controller: pageController,
-                  itemCount: fotos.length,
+                  itemCount: availableFotos.length,
                   onPageChanged: (i) {
                     setDialogState(() {
                       currentIndex = i;
                     });
                   },
                   itemBuilder: (context, index) {
+                    final foto = availableFotos[index];
                     return InteractiveViewer(
                       minScale: 1,
                       maxScale: 4,
                       child: Center(
-                        child: Image.network(
-                          fotos[index].url,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.broken_image_outlined,
-                              size: 48,
-                              color: Colors.white54,
-                            );
-                          },
-                        ),
+                        child: foto.url != null && foto.url!.isNotEmpty
+                            ? Image.network(
+                                foto.url!,
+                                fit: BoxFit.contain,
+                                loadingBuilder: (context, child, progress) {
+                                  if (progress == null) return child;
+                                  return const Center(
+                                    child: SizedBox(
+                                      width: 28,
+                                      height: 28,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white54,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return _buildPhotoNotFound(
+                                    size: 48,
+                                    light: true,
+                                  );
+                                },
+                              )
+                            : _buildPhotoNotFound(size: 48, light: true),
                       ),
                     );
                   },
@@ -1423,7 +1493,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   ),
                 ),
 
-                if (fotos.length > 1)
+                if (availableFotos.length > 1)
                   Positioned(
                     bottom: MediaQuery.of(ctx).padding.bottom + 18,
                     left: 0,
@@ -1439,7 +1509,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '${currentIndex + 1} / ${fotos.length}',
+                          '${currentIndex + 1} / ${availableFotos.length}',
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
