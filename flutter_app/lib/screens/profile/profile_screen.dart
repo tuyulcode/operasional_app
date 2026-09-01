@@ -60,125 +60,175 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: Container(
                   decoration: const BoxDecoration(
-                    gradient: AppTheme.headerGradient,
+                    color: Color(0xFF1D2B49),
                   ),
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
-                  child: Column(
+                  child: Stack(
                     children: [
-                      // Top row
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => Navigator.of(context).pop(),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
+                      // Dekorasi lingkaran halus di background untuk
+                      // memberi kedalaman tanpa ramai.
+                      Positioned(
+                        top: -46,
+                        right: -34,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.06),
                           ),
-                          Expanded(
-                            child: Text(
-                              'PROFILE',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 2,
-                                color: Colors.white.withValues(alpha: 0.9),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 36),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 20),
+                      Positioned(
+                        bottom: -60,
+                        left: -40,
+                        child: Container(
+                          width: 130,
+                          height: 130,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
+                      ),
 
-                      // Avatar
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            width: 88,
-                            height: 88,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.85),
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 42),
+                        child: Column(
+                          children: [
+                            // Top row
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => Navigator.of(context).pop(),
+                                  child: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.16,
+                                      ),
+                                      borderRadius: BorderRadius.circular(11),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.14,
+                                        ),
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_back_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'PROFILE',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 2.4,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.92,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 36),
+                              ],
+                            ),
+                            const SizedBox(height: 22),
+
+                            // Avatar
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  width: 92,
+                                  height: 92,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
+                                      width: 3,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.18,
+                                        ),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: user?.photoUrl != null
+                                      ? ClipOval(
+                                          child: Image.network(
+                                            user!.photoUrl!,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.person_rounded,
+                                          size: 46,
+                                          color: Colors.white,
+                                        ),
                                 ),
                               ],
                             ),
-                            child: user?.photoUrl != null
-                                ? ClipOval(
-                                    child: Image.network(
-                                      user!.photoUrl!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.person_rounded,
-                                    size: 44,
+                            const SizedBox(height: 16),
+                            Text(
+                              user?.username ?? '-',
+                              style: GoogleFonts.inter(
+                                fontSize: 21,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusFull,
+                                ),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isAdmin
+                                        ? Icons.verified_rounded
+                                        : Icons.badge_outlined,
+                                    size: 14,
                                     color: Colors.white,
                                   ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        user?.username ?? '-',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusFull,
-                          ),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.35),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isAdmin
-                                  ? Icons.verified_rounded
-                                  : Icons.badge_outlined,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              isAdmin ? 'Administrator' : 'Petugas',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isAdmin ? 'Administrator' : 'Petugas',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -191,9 +241,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // ── Body ──
               Transform.translate(
-                offset: const Offset(0, -20),
+                offset: const Offset(0, -22),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -208,7 +258,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           borderRadius: BorderRadius.circular(
                             AppTheme.radiusLg,
                           ),
-                          boxShadow: AppTheme.cardShadow,
+                          border: Border.all(
+                            color: const Color(0xFFEDF0F5),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
@@ -218,14 +277,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               user?.username ?? '-',
                               AppTheme.primary,
                             ),
-                            const Divider(height: 1),
+                            Divider(
+                              height: 1,
+                              color: const Color(0xFFF0F2F6),
+                            ),
                             _infoRow(
                               Icons.shield_outlined,
                               'Role',
                               isAdmin ? 'Administrator' : 'Petugas',
                               AppTheme.accent,
                             ),
-                            const Divider(height: 1),
+                            Divider(
+                              height: 1,
+                              color: const Color(0xFFF0F2F6),
+                            ),
                             _infoRow(
                               Icons.apartment_rounded,
                               'Organisasi',
@@ -235,18 +300,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
                       Padding(
-                        padding: const EdgeInsets.only(left: 4, bottom: 8),
-                        child: Text(
-                          'LAINNYA',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                            color: AppTheme.textMuted,
-                          ),
+                        padding: const EdgeInsets.only(left: 4, bottom: 10),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 4,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'LAINNYA',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.3,
+                                color: AppTheme.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -257,7 +335,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           borderRadius: BorderRadius.circular(
                             AppTheme.radiusLg,
                           ),
-                          boxShadow: AppTheme.cardShadow,
+                          border: Border.all(
+                            color: const Color(0xFFEDF0F5),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(
@@ -272,7 +359,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 content:
                                     'Tagihan Air Mobile adalah aplikasi untuk pencatatan dan monitoring tagihan air PLN Nusantara Power.\n\nVersi 1.0.0',
                               ),
-                              const Divider(height: 1),
+                              Divider(
+                                height: 1,
+                                color: const Color(0xFFF0F2F6),
+                              ),
                               _ExpandableTile(
                                 key: _bantuanKey,
                                 icon: Icons.help_outline_rounded,
@@ -286,7 +376,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 30),
 
                       // Logout
                       SizedBox(
@@ -311,7 +401,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               alpha: 0.06,
                             ),
                             side: BorderSide(
-                              color: AppTheme.error.withValues(alpha: 0.35),
+                              color: AppTheme.error.withValues(alpha: 0.3),
+                              width: 1.2,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
@@ -321,13 +412,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 18),
                       Text(
                         '© ${DateTime.now().year} PLN Nusantara Power\nv1.0.0',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           color: AppTheme.textMuted,
-                          height: 1.5,
+                          height: 1.6,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -344,12 +435,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _infoRow(IconData icon, String label, String value, Color accent) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 13),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -368,7 +459,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: AppTheme.textMuted,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   value,
                   style: GoogleFonts.inter(
@@ -543,14 +634,16 @@ class _ExpandableTileState extends State<_ExpandableTile> {
         Material(
           color: Colors.transparent,
           child: InkWell(
+            splashColor: widget.accent.withValues(alpha: 0.08),
+            highlightColor: widget.accent.withValues(alpha: 0.04),
             onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
               child: Row(
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: widget.accent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -571,9 +664,9 @@ class _ExpandableTileState extends State<_ExpandableTile> {
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: const Icon(
+                    child: Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: AppTheme.textMuted,
+                      color: _expanded ? widget.accent : AppTheme.textMuted,
                       size: 22,
                     ),
                   ),
@@ -590,14 +683,14 @@ class _ExpandableTileState extends State<_ExpandableTile> {
               ? const SizedBox(width: double.infinity)
               : Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 66),
+                    padding: const EdgeInsets.only(left: 52),
                     child: Text(
                       widget.content,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        height: 1.5,
+                        height: 1.55,
                         color: AppTheme.textSecondary,
                       ),
                     ),
