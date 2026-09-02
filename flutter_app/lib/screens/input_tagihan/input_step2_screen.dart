@@ -9,6 +9,7 @@ import '../../models/area.dart';
 import '../../models/titik_meter.dart';
 import '../../providers/tagihan_provider.dart';
 import '../../screens/profile/profile_screen.dart';
+import '../../widgets/tappable.dart';
 import 'input_step3_screen.dart';
 
 class InputStep2Screen extends StatefulWidget {
@@ -216,8 +217,9 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
 
                   // Batal
                   Center(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () => Navigator.of(context).pop(),
+                      borderRadius: BorderRadius.circular(4),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
@@ -259,8 +261,9 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
         children: [
           Row(
             children: [
-              GestureDetector(
+              Tappable(
                 onTap: () => Navigator.of(context).maybePop(),
+                borderRadius: BorderRadius.circular(10),
                 child: Container(
                   width: 34,
                   height: 34,
@@ -300,7 +303,7 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
               ),
               const Spacer(),
               // Menu profil — tap untuk membuka ProfileScreen
-              GestureDetector(
+              Tappable(
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -308,6 +311,7 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                     ),
                   );
                 },
+                circular: true,
                 child: Container(
                   width: 34,
                   height: 34,
@@ -427,10 +431,14 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
+              Tappable(
                 onTap: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.edit_rounded,
-                    size: 16, color: AppTheme.primary),
+                circular: true,
+                child: const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Icon(Icons.edit_rounded,
+                      size: 16, color: AppTheme.primary),
+                ),
               ),
             ],
           ),
@@ -869,8 +877,9 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                   Positioned(
                     top: 4,
                     right: 4,
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () => setState(() => _fotos.removeAt(i)),
+                      borderRadius: BorderRadius.circular(6),
                       child: Container(
                         width: 22,
                         height: 22,
@@ -921,8 +930,9 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     required String label,
     required VoidCallback? onTap,
   }) {
-    return GestureDetector(
+    return Tappable(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
       child: DottedBorderBox(
         child: Container(
           width: double.infinity,

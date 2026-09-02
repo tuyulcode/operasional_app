@@ -4,6 +4,7 @@ import '../config/theme.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'input_tagihan/input_step1_screen.dart';
 import 'riwayat/riwayat_screen.dart';
+import '../widgets/tappable.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -147,12 +148,13 @@ class _MainShellState extends State<MainShell> {
   }
 
   Widget _buildCenterButton() {
-    return GestureDetector(
+    return Tappable(
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const InputStep1Screen()),
         );
       },
+      borderRadius: BorderRadius.circular(12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
