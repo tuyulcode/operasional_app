@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/storage_service.dart';
+import '../widgets/tappable.dart';
 import 'main_shell.dart';
 import 'profile/profile_screen.dart';
 
@@ -210,26 +211,36 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
+              Tappable(
                 onTap: () => setState(() => _rememberMe = !_rememberMe),
-                child: Text(
-                  'Ingat saya',
-                  style: GoogleFonts.inter(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4, vertical: 2),
+                  child: Text(
+                    'Ingat saya',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ),
               ),
               const Spacer(),
-              GestureDetector(
+              Tappable(
                 onTap: _goToForgotPasswordHelp,
-                child: Text(
-                  'Lupa password?',
-                  style: GoogleFonts.inter(
-                    fontSize: 12.5,
-                    color: _LoginPalette.navyDark,
-                    fontWeight: FontWeight.w600,
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4, vertical: 2),
+                  child: Text(
+                    'Lupa password?',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: _LoginPalette.navyDark,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

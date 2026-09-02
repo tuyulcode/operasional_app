@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/tappable.dart';
 import '../login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -98,8 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // Top row
                             Row(
                               children: [
-                                GestureDetector(
+                                Tappable(
                                   onTap: () => Navigator.of(context).pop(),
+                                  borderRadius: BorderRadius.circular(11),
                                   child: Container(
                                     width: 36,
                                     height: 36,

@@ -9,6 +9,7 @@ import '../../models/titik_meter.dart';
 import '../../providers/tagihan_provider.dart';
 import '../main_shell.dart';
 import '../../screens/profile/profile_screen.dart';
+import '../../widgets/tappable.dart';
 
 class InputStep3Screen extends StatefulWidget {
   final Area area;
@@ -268,8 +269,9 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
         children: [
           Row(
             children: [
-              GestureDetector(
+              Tappable(
                 onTap: () => Navigator.of(context).maybePop(),
+                borderRadius: BorderRadius.circular(10),
                 child: Container(
                   width: 34,
                   height: 34,
@@ -309,7 +311,7 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
               ),
               const Spacer(),
               // Menu profil — tap untuk membuka ProfileScreen
-              GestureDetector(
+              Tappable(
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -317,6 +319,7 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
                     ),
                   );
                 },
+                circular: true,
                 child: Container(
                   width: 34,
                   height: 34,

@@ -7,6 +7,7 @@ import '../../models/area.dart';
 import '../../models/titik_meter.dart';
 import '../../providers/master_data_provider.dart';
 import '../../screens/profile/profile_screen.dart';
+import '../../widgets/tappable.dart';
 import 'input_step2_screen.dart';
 
 class InputStep1Screen extends StatefulWidget {
@@ -189,8 +190,9 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
         children: [
           Row(
             children: [
-              GestureDetector(
+              Tappable(
                 onTap: () => Navigator.of(context).maybePop(),
+                borderRadius: BorderRadius.circular(8),
                 child: Container(
                   width: 32,
                   height: 32,
@@ -230,7 +232,7 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
               ),
               const Spacer(),
               // Menu profil — tap untuk membuka ProfileScreen
-              GestureDetector(
+              Tappable(
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -238,6 +240,7 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
                     ),
                   );
                 },
+                circular: true,
                 child: Container(
                   width: 32,
                   height: 32,
@@ -431,7 +434,7 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
       displayText = '${months[monthIdx]} $year';
     }
 
-    return GestureDetector(
+    return Tappable(
       onTap: () async {
         DateTime initialDate;
         if (_selectedPeriode != null) {
@@ -465,6 +468,7 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
           });
         }
       },
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(

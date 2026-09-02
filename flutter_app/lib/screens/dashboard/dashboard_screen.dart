@@ -9,6 +9,7 @@ import '../../models/dashboard_stats.dart';
 import '../input_tagihan/input_step1_screen.dart';
 import '../profile/profile_screen.dart';
 import '../riwayat/riwayat_screen.dart';
+import '../../widgets/tappable.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onLihatSemua;
@@ -126,10 +127,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           // Profile button
-          GestureDetector(
+          Tappable(
             onTap: () => Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
+            circular: true,
             child: Container(
               width: 32,
               height: 32,
@@ -190,10 +192,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        GestureDetector(
+        Tappable(
           onTap: () => Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => const InputStep1Screen())),
+          borderRadius: BorderRadius.circular(12),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
@@ -525,7 +528,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: AppTheme.textSecondary,
               ),
             ),
-            GestureDetector(
+            Tappable(
               onTap: () {
                 if (widget.onLihatSemua != null) {
                   widget.onLihatSemua!();
@@ -535,12 +538,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   );
                 }
               },
-              child: Text(
-                'Lihat Semua',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.primary,
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Text(
+                  'Lihat Semua',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.primary,
+                  ),
                 ),
               ),
             ),

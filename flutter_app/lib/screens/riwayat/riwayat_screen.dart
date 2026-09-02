@@ -11,6 +11,7 @@ import '../../models/tagihan_air.dart';
 import '../../providers/master_data_provider.dart';
 import '../../providers/tagihan_provider.dart';
 import '../../screens/profile/profile_screen.dart';
+import '../../widgets/tappable.dart';
 
 class RiwayatScreen extends StatefulWidget {
   /// True kalau layar ini dibuka lewat push (mis. dari "Lihat Semua" di
@@ -283,8 +284,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
           Row(
             children: [
               if (widget.showBackButton) ...[
-                GestureDetector(
+                Tappable(
                   onTap: () => Navigator.of(context).pop(),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
                     width: 34,
                     height: 34,
@@ -335,12 +337,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               const Spacer(),
 
               // Menu profil — tap untuk membuka ProfileScreen
-              GestureDetector(
+              Tappable(
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const ProfileScreen()),
                   );
                 },
+                borderRadius: BorderRadius.circular(10),
                 child: Container(
                   width: 34,
                   height: 34,
@@ -460,8 +463,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
                   if (_hasActiveFilter) ...[
                     const SizedBox(width: 8),
-                    GestureDetector(
+                    Tappable(
                       onTap: _resetAllFilters,
+                      borderRadius: BorderRadius.circular(20),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 11),
                         height: 32,
@@ -508,8 +512,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return Tappable(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 11),
         decoration: BoxDecoration(
@@ -865,27 +870,31 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
         const Spacer(),
 
-        GestureDetector(
+        Tappable(
           onTap: () => _showDetail(t),
-          child: Row(
-            children: [
-              Text(
-                'Lihat Detail',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF008F81),
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+            child: Row(
+              children: [
+                Text(
+                  'Lihat Detail',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF008F81),
+                  ),
                 ),
-              ),
 
-              const SizedBox(width: 3),
+                const SizedBox(width: 3),
 
-              const Icon(
-                Icons.arrow_forward_rounded,
-                size: 14,
-                color: Color(0xFF008F81),
-              ),
-            ],
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 14,
+                  color: Color(0xFF008F81),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -897,12 +906,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // ============================================================
 
   Widget _buildLoadMoreButton() {
-    return GestureDetector(
+    return Tappable(
       onTap: () {
         setState(() {
           _showAll = !_showAll;
         });
       },
+      borderRadius: BorderRadius.circular(7),
       child: Container(
         height: 34,
         decoration: BoxDecoration(
@@ -1137,8 +1147,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return Tappable(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 6),
@@ -1402,12 +1413,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             children: List.generate(t.fotos.length, (index) {
               final foto = t.fotos[index];
               final canOpen = foto.isAvailable;
-              return GestureDetector(
+              return Tappable(
                 onTap: canOpen ? () => _openFotoViewer(t.fotos, index) : null,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: _buildFotoThumbnail(foto),
-                ),
+                borderRadius: BorderRadius.circular(8),
+                child: _buildFotoThumbnail(foto),
               );
             }),
           ),
@@ -1614,8 +1623,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
                 if (_hasActiveFilter) ...[
                   const SizedBox(height: 16),
-                  GestureDetector(
+                  Tappable(
                     onTap: _resetAllFilters,
+                    borderRadius: BorderRadius.circular(20),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
