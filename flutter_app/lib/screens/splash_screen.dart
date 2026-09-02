@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import '../config/theme.dart';
+import '../providers/auth_provider.dart';
 import 'login_screen.dart';
+import 'main_shell.dart';
 
 /// Palette used only on this splash screen.
 class _SplashPalette {
@@ -11,7 +14,9 @@ class _SplashPalette {
 }
 
 /// Single-slide splash screen: brand + tagline over a looping muted
-/// background video, auto-navigates to LoginScreen after 5 seconds.
+/// background video. While the video plays, it also validates any saved
+/// login session, then routes to MainShell (already logged in) or
+/// LoginScreen — whichever check finishes last, after a 5s minimum.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -20,14 +25,27 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _autoNavigateTimer;
   late final VideoPlayerController _videoController;
   bool _videoReady = false;
+  bool _minDurationElapsed = false;
+  bool _authChecked = false;
+  bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
-    _autoNavigateTimer = Timer(const Duration(seconds: 5), _goToLogin);
+
+    Timer(const Duration(seconds: 5), () {
+      _minDurationElapsed = true;
+      _tryNavigate();
+    });
+
+    // Validate any saved token so an already-logged-in user lands on
+    // MainShell directly, instead of being forced to log in every time.
+    context.read<AuthProvider>().checkAuth().then((_) {
+      _authChecked = true;
+      _tryNavigate();
+    });
 
     _videoController = VideoPlayerController.asset('assets/videos/splash.mp4')
       ..setLooping(true)
@@ -44,16 +62,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void dispose() {
-    _autoNavigateTimer?.cancel();
     _videoController.dispose();
     super.dispose();
   }
 
-  void _goToLogin() {
-    _autoNavigateTimer?.cancel();
+  void _tryNavigate() {
+    if (_navigated || !_minDurationElapsed || !_authChecked) return;
+    _navigated = true;
     if (!mounted) return;
+
+    final isLoggedIn = context.read<AuthProvider>().isLoggedIn;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(
+        builder: (_) => isLoggedIn ? const MainShell() : const LoginScreen(),
+      ),
     );
   }
 
