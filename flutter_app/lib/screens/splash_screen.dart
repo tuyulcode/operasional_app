@@ -24,16 +24,40 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late final VideoPlayerController _videoController;
   bool _videoReady = false;
   bool _minDurationElapsed = false;
   bool _authChecked = false;
   bool _navigated = false;
 
+  late final AnimationController _goController;
+  late final Animation<double> _goOffset;
+
+  late final AnimationController _chevronController;
+
   @override
   void initState() {
     super.initState();
+
+    // Animasi badge "GO" bergerak naik-turun (slide ke atas) terus-menerus
+    // selama splash screen tampil.
+    _goController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+
+    _goOffset = Tween<double>(begin: 0, end: -14).animate(
+      CurvedAnimation(parent: _goController, curve: Curves.easeInOut),
+    );
+
+    // Chevron "^" putih transparan yang bergerak naik & memudar berulang,
+    // kayak indikator scroll-up. Loop terus tanpa reverse.
+    _chevronController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
 
     Timer(const Duration(seconds: 5), () {
       _minDurationElapsed = true;
@@ -63,6 +87,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void dispose() {
     _videoController.dispose();
+    _goController.dispose();
+    _chevronController.dispose();
     super.dispose();
   }
 
@@ -75,6 +101,40 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => isLoggedIn ? const MainShell() : const LoginScreen(),
+      ),
+    );
+  }
+
+  /// Satu tanda "^" putih transparan yang bergerak naik sambil memudar,
+  /// diulang terus dengan jeda (delay) berbeda supaya kelihatan mengalir.
+  Widget _buildChevron(double delay) {
+    return AnimatedBuilder(
+      animation: _chevronController,
+      builder: (context, child) {
+        final t = (_chevronController.value + delay) % 1.0;
+        final offsetY = -36 * t;
+
+        double opacity;
+        if (t < 0.25) {
+          opacity = t / 0.25;
+        } else if (t > 0.75) {
+          opacity = (1.0 - t) / 0.25;
+        } else {
+          opacity = 1.0;
+        }
+
+        return Transform.translate(
+          offset: Offset(0, offsetY),
+          child: Opacity(
+            opacity: opacity.clamp(0.0, 1.0),
+            child: child,
+          ),
+        );
+      },
+      child: Icon(
+        Icons.keyboard_arrow_up_rounded,
+        color: Colors.white.withValues(alpha: 0.85),
+        size: 24,
       ),
     );
   }
@@ -178,18 +238,72 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 40),
-                    const SizedBox(
-                      width: 26,
-                      height: 26,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.6,
-                      ),
-                    ),
+                    const SizedBox(height: 6),
                   ],
                 ),
               ),
+            ),
+          ),
+
+          // Badge "GO" melayang di bagian bawah layar, animasi naik-turun terus,
+          // dengan chevron "^" putih transparan mengalir ke atas di atasnya.
+          Align(
+            alignment: const Alignment(0, 0.72),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 44,
+                  width: 40,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      _buildChevron(0.0),
+                      _buildChevron(0.33),
+                      _buildChevron(0.66),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                AnimatedBuilder(
+                  animation: _goOffset,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, _goOffset.value),
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.35),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 18,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'GO',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
