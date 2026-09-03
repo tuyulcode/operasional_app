@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/area.dart';
 import '../../models/titik_meter.dart';
+import '../../providers/master_data_provider.dart';
 import '../../providers/tagihan_provider.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../widgets/tappable.dart';
@@ -45,6 +46,9 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
   @override
   void initState() {
     super.initState();
+    // Meter Faktor & Tarif selalu otomatis dari data titik meter, dan
+    // dikunci (readonly) — sama seperti perilaku form di website, tidak
+    // bisa diedit manual oleh user sama sekali.
     _meterFaktorController.text = widget.titikMeter.meterFaktor.toString();
     _tarifController.text = widget.titikMeter.tarifHarga.toStringAsFixed(0);
     _fetchMeterLalu();
@@ -85,10 +89,26 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     return (ini - lalu) * faktor;
   }
 
-  double get _estimasi {
+  double get _jumlahSebelumPpn {
     final tarif = double.tryParse(_tarifController.text) ?? 0;
     return _pemakaian * tarif;
   }
+
+  /// Persentase PPN yang berlaku untuk input ini — 0 kalau area tidak
+  /// kena PPN. Ini cuma estimasi tampilan; angka final & otoritatif
+  /// tetap dihitung ulang oleh backend saat data disimpan.
+  double get _ppnPersentase {
+    if (!widget.area.kenaPpn) return 0;
+    return context.read<MasterDataProvider>().ppnPersentaseAktif;
+  }
+
+  double get _ppnNominal {
+    return double.parse(
+      (_jumlahSebelumPpn * _ppnPersentase / 100).toStringAsFixed(2),
+    );
+  }
+
+  double get _estimasi => _jumlahSebelumPpn + _ppnNominal;
 
   bool get _canNext {
     return _meterIniController.text.isNotEmpty &&
@@ -136,6 +156,8 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
           meterFaktor: double.tryParse(_meterFaktorController.text) ?? 1,
           tarif: double.tryParse(_tarifController.text) ?? 0,
           pemakaian: _pemakaian,
+          ppnPersentase: _ppnPersentase,
+          ppnNominal: _ppnNominal,
           estimasi: _estimasi,
           fotos: _fotos,
           meterLaluManual: !_meterLaluAutoFilled,
@@ -691,29 +713,33 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
           ),
           const SizedBox(height: 16),
 
-          // Meter Faktor & Tarif
+          // Meter Faktor & Tarif — selalu otomatis dari data titik meter
+          // dan dikunci (readonly), sama seperti perilaku di website:
+          // user tidak bisa mengedit nilai ini secara manual sama sekali.
           Row(
             children: [
               Expanded(
-                child: _buildMiniField(
+                child: _buildLockedMiniField(
                   label: 'Meter Faktor',
-                  controller: _meterFaktorController,
+                  value: _meterFaktorController.text,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildMiniField(
+                child: _buildLockedMiniField(
                   label: 'Tarif (Rp/m\u00b3)',
-                  controller: _tarifController,
-                  prefix: 'Rp ',
+                  value: _currencyFormat
+                      .format(double.tryParse(_tarifController.text) ?? 0),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // Pemakaian Terkoreksi (highlight)
-          _buildFieldLabel('Pemakaian Terkoreksi (m\u00b3)'),
+          // Jumlah Pengambilan (readonly, hasil hitung — sebelumnya
+          // berlabel "Pemakaian Terkoreksi", disamakan dengan label &
+          // caption di form website)
+          _buildFieldLabel('Jumlah Pengambilan (m\u00b3)'),
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
@@ -732,6 +758,41 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
               ),
             ),
           ),
+          const SizedBox(height: 4),
+          Text(
+            '(Meter Bulan Ini - Meter Bulan Lalu) x Meter Faktor',
+            style: GoogleFonts.inter(fontSize: 10, color: AppTheme.textMuted),
+          ),
+
+          if (widget.area.kenaPpn) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildReadonlyMiniField(
+                    label: 'Jumlah Sebelum PPN (Rp)',
+                    value: _currencyFormat.format(_jumlahSebelumPpn),
+                    caption: 'Jumlah Pengambilan x Tarif',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildReadonlyMiniField(
+                    label: 'PPN (%)',
+                    value: '${_ppnPersentase.toStringAsFixed(0)}%',
+                    caption: 'Persentase PPN yang berlaku',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildReadonlyMiniField(
+              label: 'PPN (Rp)',
+              value: _currencyFormat.format(_ppnNominal),
+              caption: 'Jumlah Sebelum PPN x PPN(%)',
+              fullWidth: true,
+            ),
+          ],
         ],
       ),
     );
@@ -748,10 +809,59 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     );
   }
 
-  Widget _buildMiniField({
+  /// Kotak nilai hasil hitung (bukan input) — dipakai untuk field turunan
+  /// seperti breakdown PPN, gaya visual senada dengan field lain tapi
+  /// tidak bisa diketik, karena nilainya memang bukan input manual.
+  Widget _buildReadonlyMiniField({
     required String label,
-    required TextEditingController controller,
-    String? prefix,
+    required String value,
+    String? caption,
+    bool fullWidth = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+              fontSize: 11, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          width: fullWidth ? double.infinity : null,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          alignment: fullWidth ? Alignment.center : Alignment.centerLeft,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5FB),
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          ),
+          child: Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ),
+        if (caption != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            caption,
+            style: GoogleFonts.inter(fontSize: 10, color: AppTheme.textMuted),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Field mini yang terkunci (readonly) dengan ikon gembok — dipakai
+  /// untuk Meter Faktor & Tarif, yang selalu otomatis dari data titik
+  /// meter dan tidak pernah bisa diedit manual (beda dengan Meter Bulan
+  /// Lalu yang kadang bisa diedit kalau belum ada histori).
+  Widget _buildLockedMiniField({
+    required String label,
+    required String value,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -768,29 +878,29 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
             color: const Color(0xFFF1F5FB),
             borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           ),
-          child: TextField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-            ),
-            decoration: InputDecoration(
-              prefixText: prefix,
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            onChanged: (_) => setState(() {}),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+              Icon(Icons.lock_outline_rounded,
+                  size: 14, color: AppTheme.textMuted),
+            ],
           ),
         ),
       ],
     );
   }
 
-  // ── Card Estimasi Tagihan (dark navy) ──
+  // ── Card Estimasi Tagihan (dark navy, breakdown field seperti di web) ──
   Widget _buildEstimateCard() {
     final tarif = double.tryParse(_tarifController.text) ?? 0;
     return Container(
@@ -832,7 +942,7 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                       size: 18, color: AppTheme.heroCardLabel),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 'Tarif: ${_currencyFormat.format(tarif)} / m\u00b3',
                 style: GoogleFonts.inter(
@@ -840,19 +950,73 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                   color: AppTheme.heroCardLabel,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                _currencyFormat.format(_estimasi),
-                style: GoogleFonts.hankenGrotesk(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
+              const SizedBox(height: 14),
+
+              // Breakdown — samakan dengan field di web: Jumlah Sebelum
+              // PPN, PPN (%), PPN (Rp), baru Jumlah akhir.
+              _estimateRow(
+                'Jumlah Sebelum PPN',
+                _currencyFormat.format(_jumlahSebelumPpn),
+              ),
+              const SizedBox(height: 8),
+              _estimateRow(
+                'PPN (${_ppnPersentase.toStringAsFixed(_ppnPersentase % 1 == 0 ? 0 : 2)}%)',
+                _currencyFormat.format(_ppnNominal),
+              ),
+
+              const SizedBox(height: 12),
+              Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
+              const SizedBox(height: 12),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Jumlah',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.heroCardLabel,
+                    ),
+                  ),
+                  Text(
+                    _currencyFormat.format(_estimasi),
+                    style: GoogleFonts.hankenGrotesk(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _estimateRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12.5,
+            color: AppTheme.heroCardLabel.withValues(alpha: 0.85),
+          ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 

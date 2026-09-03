@@ -36,6 +36,8 @@ class TagihanAir {
   final double meterFaktor;
   final double tarif;
   final double pemakaian;
+  final double ppnPersentase;
+  final double ppnNominal;
   final double jumlah;
   final List<TagihanAirFoto> fotos;
   final String? createdAt;
@@ -55,11 +57,21 @@ class TagihanAir {
     required this.meterFaktor,
     required this.tarif,
     required this.pemakaian,
+    this.ppnPersentase = 0,
+    this.ppnNominal = 0,
     required this.jumlah,
     this.fotos = const [],
     this.createdAt,
     this.updatedAt,
   });
+
+  /// Total sebelum PPN ditambahkan (pemakaian * tarif) — turunan, bukan
+  /// disimpan terpisah di backend, dihitung balik dari jumlah - ppnNominal
+  /// supaya selalu konsisten dengan apa yang benar-benar tersimpan.
+  double get jumlahSebelumPpn => jumlah - ppnNominal;
+
+  /// True kalau tagihan ini kena PPN (persentase > 0).
+  bool get kenaPpn => ppnPersentase > 0;
 
   factory TagihanAir.fromJson(Map<String, dynamic> json) {
     return TagihanAir(
@@ -76,6 +88,8 @@ class TagihanAir {
       meterFaktor: (json['meter_faktor'] as num).toDouble(),
       tarif: (json['tarif'] as num).toDouble(),
       pemakaian: (json['pemakaian'] as num).toDouble(),
+      ppnPersentase: (json['ppn_persentase'] as num?)?.toDouble() ?? 0,
+      ppnNominal: (json['ppn_nominal'] as num?)?.toDouble() ?? 0,
       jumlah: (json['jumlah'] as num).toDouble(),
       fotos: (json['fotos'] as List<dynamic>? ?? [])
           .map((f) => TagihanAirFoto.fromJson(f))

@@ -9,10 +9,16 @@ class MasterDataProvider extends ChangeNotifier {
   List<Area> _areas = [];
   List<TitikMeter> _titikMeters = [];
   bool _isLoading = false;
+  double _ppnPersentaseAktif = 0;
 
   List<Area> get areas => _areas;
   List<TitikMeter> get titikMeters => _titikMeters;
   bool get isLoading => _isLoading;
+
+  /// Persentase PPN yang sedang aktif — hanya untuk preview/estimasi di
+  /// layar input. Nilai final & otoritatif tetap dihitung backend saat
+  /// data disimpan, jadi tidak masalah kalau nilai ini sempat stale.
+  double get ppnPersentaseAktif => _ppnPersentaseAktif;
 
   Future<void> loadAreas() async {
     try {
@@ -22,6 +28,18 @@ class MasterDataProvider extends ChangeNotifier {
           .toList();
       notifyListeners();
     } catch (_) {}
+  }
+
+  Future<void> loadPpnAktif() async {
+    try {
+      final res = await _api.getPpnAktif();
+      _ppnPersentaseAktif =
+          (res.data['data']['persentase'] as num?)?.toDouble() ?? 0;
+      notifyListeners();
+    } catch (_) {
+      // Diamkan — layar input tetap bisa jalan tanpa preview PPN kalau
+      // endpoint ini gagal; backend tetap menghitung yang sebenarnya.
+    }
   }
 
   Future<void> loadTitikMeter({int? areaId}) async {

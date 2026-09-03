@@ -1282,6 +1282,17 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                             _currencyFormat.format(t.tarif),
                           ),
 
+                          if (t.kenaPpn) ...[
+                            _buildDetailRow(
+                              'Subtotal',
+                              _currencyFormat.format(t.jumlahSebelumPpn),
+                            ),
+                            _buildDetailRow(
+                              'PPN (${t.ppnPersentase.toStringAsFixed(0)}%)',
+                              _currencyFormat.format(t.ppnNominal),
+                            ),
+                          ],
+
                           _buildDetailRow(
                             'Total Tagihan',
                             _currencyFormat.format(t.jumlah),
