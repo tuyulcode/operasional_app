@@ -38,7 +38,6 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   int? _selectedAreaId;
   String? _selectedBulan;
   String? _selectedTahun;
-  String? _selectedTitikMeter;
 
   bool _showAll = false;
 
@@ -105,17 +104,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 
   bool get _hasActiveFilter =>
-      _selectedAreaId != null ||
-      _selectedBulan != null ||
-      _selectedTahun != null ||
-      _selectedTitikMeter != null;
+      _selectedAreaId != null || _selectedBulan != null || _selectedTahun != null;
 
   void _resetAllFilters() {
     setState(() {
       _selectedAreaId = null;
       _selectedBulan = null;
       _selectedTahun = null;
-      _selectedTitikMeter = null;
     });
     _loadData();
   }
@@ -139,25 +134,6 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         return t.periodeLabel.contains(_selectedTahun!);
       }).toList();
     }
-
-    // Filter titik meter
-    if (_selectedTitikMeter != null) {
-      result = result.where((t) {
-        return t.titikMeterNama == _selectedTitikMeter;
-      }).toList();
-    }
-
-    return result;
-  }
-
-  List<String> _getTitikMeters(List<TagihanAir> tagihans) {
-    final result = tagihans
-        .map((e) => e.titikMeterNama)
-        .where((e) => e.isNotEmpty)
-        .toSet()
-        .toList();
-
-    result.sort();
 
     return result;
   }
@@ -202,7 +178,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-              child: _buildFilterRow(allTagihans),
+              child: _buildFilterRow(),
             ),
 
             const SizedBox(height: 12),
@@ -370,6 +346,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               color: const Color(0xFFE7F0FF),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFFD0D9E8)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: TextField(
               controller: _searchController,
@@ -421,9 +404,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // FILTER ROW
   // ============================================================
 
-  Widget _buildFilterRow(List<TagihanAir> tagihans) {
-    final titikMeters = _getTitikMeters(tagihans);
-
+  Widget _buildFilterRow() {
     return SizedBox(
       height: 32,
       child: LayoutBuilder(
@@ -451,14 +432,6 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                     label: _getSelectedAreaName(),
                     selected: _selectedAreaId != null,
                     onTap: _showAreaFilter,
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  _buildDropdownFilter(
-                    label: _selectedTitikMeter ?? 'Titik Meter',
-                    selected: _selectedTitikMeter != null,
-                    onTap: () => _showTitikMeterFilter(titikMeters),
                   ),
 
                   if (_hasActiveFilter) ...[
@@ -576,6 +549,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             title: 'TOTAL PEMAKAIAN',
             value: '${totalPemakaian.toStringAsFixed(0)} m³',
             subtitle: 'Tahun $currentYear',
+            icon: Icons.water_drop_rounded,
             dark: true,
           ),
         ),
@@ -587,6 +561,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             title: 'TOTAL TAGIHAN',
             value: _formatCompactCurrency(totalTagihan),
             subtitle: 'Tahun $currentYear',
+            icon: Icons.receipt_long_rounded,
             dark: false,
           ),
         ),
@@ -598,60 +573,80 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     required String title,
     required String value,
     required String subtitle,
+    required IconData icon,
     required bool dark,
   }) {
     return Container(
       height: 82,
       padding: const EdgeInsets.fromLTRB(13, 11, 10, 9),
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         color: dark ? const Color(0xFF1D2B49) : const Color(0xFFDCEAFF),
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: dark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFC9DCF5),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: dark ? 0.14 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.4,
+          Positioned(
+            right: -8,
+            bottom: -10,
+            child: Icon(
+              icon,
+              size: 58,
               color: dark
-                  ? Colors.white.withValues(alpha: 0.55)
-                  : const Color(0xFF65738A),
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.white.withValues(alpha: 0.35),
             ),
           ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.4,
+                  color: dark
+                      ? Colors.white.withValues(alpha: 0.55)
+                      : const Color(0xFF65738A),
+                ),
+              ),
 
-          const SizedBox(height: 2),
+              const SizedBox(height: 2),
 
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: dark ? Colors.white : const Color(0xFF17233D),
-            ),
-          ),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: dark ? Colors.white : const Color(0xFF17233D),
+                ),
+              ),
 
-          const Spacer(),
+              const Spacer(),
 
-          Text(
-            subtitle,
-            style: GoogleFonts.inter(
-              fontSize: 9,
-              color: dark
-                  ? Colors.white.withValues(alpha: 0.45)
-                  : const Color(0xFF65738A),
-            ),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 9,
+                  color: dark
+                      ? Colors.white.withValues(alpha: 0.45)
+                      : const Color(0xFF65738A),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -681,6 +676,15 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   Widget _buildSectionTitle() {
     return Row(
       children: [
+        Container(
+          width: 4,
+          height: 14,
+          decoration: BoxDecoration(
+            color: AppTheme.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
         Text(
           'Riwayat Tagihan',
           style: GoogleFonts.inter(
@@ -702,13 +706,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: const Color(0xFFD1D7E0)),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE4E8EF)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.025),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -722,8 +726,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               decoration: const BoxDecoration(
                 color: Color(0xFF009B8D),
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(7),
-                  bottomLeft: Radius.circular(7),
+                  topLeft: Radius.circular(10),
+                  bottomLeft: Radius.circular(10),
                 ),
               ),
             ),
@@ -999,19 +1003,6 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       _selectedBulan = _months[picked.month - 1];
       _selectedTahun = picked.year.toString();
     });
-  }
-
-  void _showTitikMeterFilter(List<String> titikMeters) {
-    _showSelectionSheet(
-      title: 'Pilih Titik Meter',
-      items: titikMeters,
-      selected: _selectedTitikMeter,
-      onSelected: (value) {
-        setState(() {
-          _selectedTitikMeter = value;
-        });
-      },
-    );
   }
 
   void _showAreaFilter() {
@@ -1293,7 +1284,14 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                             ),
                           ],
 
-                          _buildDetailRow(
+                          const SizedBox(height: 4),
+                          Divider(
+                            height: 1,
+                            color: const Color(0xFFEDEFF3),
+                          ),
+                          const SizedBox(height: 4),
+
+                          _buildTotalRow(
                             'Total Tagihan',
                             _currencyFormat.format(t.jumlah),
                           ),
@@ -1570,6 +1568,37 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF1C2940),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Baris total yang di-highlight (ukuran lebih besar, warna aksen) —
+  /// dipakai untuk "Total Tagihan" di detail sheet, supaya lebih menonjol
+  /// dibanding baris breakdown lainnya.
+  Widget _buildTotalRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF17233D),
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF008F81),
             ),
           ),
         ],
