@@ -29,6 +29,7 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
       final prov = context.read<MasterDataProvider>();
       prov.loadAreas();
       prov.loadTitikMeter();
+      prov.loadPpnAktif();
     });
     // Default: current month
     final now = DateTime.now();

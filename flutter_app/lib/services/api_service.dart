@@ -66,6 +66,12 @@ class ApiService {
     });
   }
 
+  /// Persentase PPN yang sedang aktif — dipakai untuk preview di layar
+  /// input sebelum submit. Perhitungan final tetap di backend.
+  Future<Response> getPpnAktif() async {
+    return _dio.get('/ppn.php');
+  }
+
   // ── Tagihan Air ──
   Future<Response> getTagihanAir({int? areaId, String? bulan, String? search}) async {
     return _dio.get('/tagihan_air.php', queryParameters: {

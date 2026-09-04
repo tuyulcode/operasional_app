@@ -111,6 +111,8 @@ function format_tagihan_item($pdo, $t, $baseUrl) {
         'meter_faktor' => (float)$t['meter_faktor'],
         'tarif' => (float)$t['tarif'],
         'pemakaian' => (float)$t['pemakaian'],
+        'ppn_persentase' => (float)($t['ppn_persentase'] ?? 0),
+        'ppn_nominal' => (float)($t['ppn_nominal'] ?? 0),
         'jumlah' => (float)$t['jumlah'],
         'fotos' => $fotos,
         'created_at' => $t['created_at'] ? date('c', strtotime($t['created_at'])) : null,
@@ -208,17 +210,43 @@ if ($method === 'POST') {
     }
 
     $pemakaian = ($meter_ini - $meter_lalu) * $meter_faktor;
-    $jumlah = $pemakaian * $tarif;
+    $jumlahSebelumPpn = $pemakaian * $tarif;
+
+    // ── PPN ──────────────────────────────────────────────────────
+    // Samakan persis dengan formula di web (TagihanAirController):
+    //   ppn_persentase = area.kena_ppn ? ppn_aktif.persentase : 0
+    //   ppn_nominal     = round(jumlah_sebelum_ppn * ppn_persentase / 100, 2)
+    //   jumlah          = jumlah_sebelum_ppn + ppn_nominal
+    $areaStmt = $pdo->prepare("
+        SELECT a.kena_ppn
+        FROM titik_meter tm
+        LEFT JOIN area a ON tm.area_id = a.id
+        WHERE tm.id = ?
+        LIMIT 1
+    ");
+    $areaStmt->execute([$titik_meter_id]);
+    $areaRow = $areaStmt->fetch();
+    $kenaPpn = $areaRow ? (bool)$areaRow['kena_ppn'] : false;
+
+    $ppn_persentase = 0;
+    if ($kenaPpn) {
+        $ppnStmt = $pdo->query("SELECT persentase FROM ppn WHERE status = 'aktif' LIMIT 1");
+        $ppnAktif = $ppnStmt->fetch();
+        $ppn_persentase = $ppnAktif ? (float)$ppnAktif['persentase'] : 0;
+    }
+    $ppn_nominal = round($jumlahSebelumPpn * $ppn_persentase / 100, 2);
+    $jumlah = $jumlahSebelumPpn + $ppn_nominal;
+
     $now = date('Y-m-d H:i:s');
 
     if (!empty($id)) {
         // UPDATE — mengubah data yang sudah ada, dipilih lewat ?id= eksplisit
         $updateStmt = $pdo->prepare("
             UPDATE tagihan_air 
-            SET titik_meter_id = ?, periode = ?, meter_lalu = ?, meter_ini = ?, meter_faktor = ?, tarif = ?, pemakaian = ?, jumlah = ?, updated_at = ?
+            SET titik_meter_id = ?, periode = ?, meter_lalu = ?, meter_ini = ?, meter_faktor = ?, tarif = ?, pemakaian = ?, ppn_persentase = ?, ppn_nominal = ?, jumlah = ?, updated_at = ?
             WHERE id = ?
         ");
-        $updateStmt->execute([$titik_meter_id, $periodeDate, $meter_lalu, $meter_ini, $meter_faktor, $tarif, $pemakaian, $jumlah, $now, $id]);
+        $updateStmt->execute([$titik_meter_id, $periodeDate, $meter_lalu, $meter_ini, $meter_faktor, $tarif, $pemakaian, $ppn_persentase, $ppn_nominal, $jumlah, $now, $id]);
         $tagihanId = $id;
         $msg = "Tagihan air berhasil diperbarui.";
     } else {
@@ -226,10 +254,10 @@ if ($method === 'POST') {
         // sama dengan data yang sudah ada (satu meter boleh punya lebih
         // dari satu tagihan di bulan yang sama).
         $insertStmt = $pdo->prepare("
-            INSERT INTO tagihan_air (titik_meter_id, periode, meter_lalu, meter_ini, meter_faktor, tarif, pemakaian, jumlah, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO tagihan_air (titik_meter_id, periode, meter_lalu, meter_ini, meter_faktor, tarif, pemakaian, ppn_persentase, ppn_nominal, jumlah, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $insertStmt->execute([$titik_meter_id, $periodeDate, $meter_lalu, $meter_ini, $meter_faktor, $tarif, $pemakaian, $jumlah, $now, $now]);
+        $insertStmt->execute([$titik_meter_id, $periodeDate, $meter_lalu, $meter_ini, $meter_faktor, $tarif, $pemakaian, $ppn_persentase, $ppn_nominal, $jumlah, $now, $now]);
         $tagihanId = $pdo->lastInsertId();
         $msg = "Tagihan air berhasil ditambahkan.";
     }

@@ -20,6 +20,8 @@ class InputStep3Screen extends StatefulWidget {
   final double meterFaktor;
   final double tarif;
   final double pemakaian;
+  final double ppnPersentase;
+  final double ppnNominal;
   final double estimasi;
   final List<File> fotos;
   final bool meterLaluManual;
@@ -34,6 +36,8 @@ class InputStep3Screen extends StatefulWidget {
     required this.meterFaktor,
     required this.tarif,
     required this.pemakaian,
+    this.ppnPersentase = 0,
+    this.ppnNominal = 0,
     required this.estimasi,
     required this.fotos,
     required this.meterLaluManual,
@@ -511,6 +515,14 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
               const SizedBox(height: 8),
               _ringkasanRow(
                   'Tarif / m\u00b3', _currencyFormat.format(widget.tarif)),
+              const SizedBox(height: 8),
+              _ringkasanRow('Jumlah Sebelum PPN',
+                  _currencyFormat.format(widget.estimasi - widget.ppnNominal)),
+              const SizedBox(height: 8),
+              _ringkasanRow(
+                'PPN (${widget.ppnPersentase.toStringAsFixed(widget.ppnPersentase % 1 == 0 ? 0 : 2)}%)',
+                _currencyFormat.format(widget.ppnNominal),
+              ),
               const SizedBox(height: 14),
               Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
               const SizedBox(height: 14),
@@ -519,7 +531,7 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'Total Estimasi',
+                    'Jumlah',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
