@@ -22,79 +22,31 @@ function format_tagihan_item($pdo, $t, $baseUrl) {
     $stmt->execute([$t['id']]);
     $fotosRaw = $stmt->fetchAll();
 
+    $wwwRoot = dirname(__DIR__, 2); // .../www (parent kedua)
+    $laravelStorage = $wwwRoot . '/operasional/storage/app/public';
+
     $fotos = [];
     foreach ($fotosRaw as $f) {
         $path = $f['path_foto'];
-        if (str_starts_with($path, 'http')) {
-            // Sudah URL absolut — langsung pakai
-            $fotos[] = [
-                'id' => (int)$f['id'],
-                'url' => $path,
-                'photo_status' => 'ok',
-            ];
+
+        // Semua foto dilayani dari operasional/public/storage/ saja.
+        // path_foto di DB selalu relatif (mis. "foto-meter/xxx.png").
+        $laravelFile = $laravelStorage . '/' . $path;
+        $url = null;
+        $photoStatus = 'not_found';
+
+        if (file_exists($laravelFile)) {
+            $url = "http://{$_SERVER['HTTP_HOST']}/operasional/public/storage/" . ltrim($path, '/');
+            $photoStatus = 'ok';
         } else {
-            $url = null;
-            $photoStatus = 'not_found';
-
-            // ── Lokasi fisik file ──────────────────────────────────
-            // path_foto di DB ada 2 pola:
-            //   a) "uploads/tagihan-air/xxx.jpg"  (dari Laravel lama,
-            //      sudah termasuk prefix "uploads/")
-            //   b) "foto-meter/xxx.png"           (dari PHP API baru,
-            //      relatif terhadap folder api/uploads/)
-            //
-            // Untuk pola (a), jangan tambah "/uploads/" lagi — itu
-            // menyebabkan "uploads/uploads/..." (double prefix bug).
-
-            $apiDir = __DIR__;                                    // .../operasional_app/api
-            $wwwRoot = dirname($apiDir, 2);                       // .../www (parent kedua)
-            $laravelStorage = $wwwRoot . '/operasional/storage/app/public';
-
-            // 1) Cek di api/uploads/ — path relatif ke folder uploads
-            if (str_starts_with($path, 'uploads/')) {
-                // path sudah termasuk "uploads/", langsung gabung
-                $localFile = $apiDir . '/' . $path;
-            } else {
-                // path belum diawali "uploads/", tambahkan prefix
-                $localFile = $apiDir . '/uploads/' . $path;
-            }
-
-            if (file_exists($localFile)) {
-                $url = "{$baseUrl}/uploads/" . ltrim($path, '/');
-                $photoStatus = 'ok';
-            }
-
-            // 2) Cek di Laravel storage lama
-            if ($url === null) {
-                $laravelFile = $laravelStorage . '/' . $path;
-                if (file_exists($laravelFile)) {
-                    $url = "http://{$_SERVER['HTTP_HOST']}/operasional/public/storage/" . ltrim($path, '/');
-                    $photoStatus = 'ok';
-                }
-            }
-
-            // 3) Fallback — generate URL via junction (mungkin bisa diakses)
-            if ($url === null) {
-                $fallbackPath = "http://{$_SERVER['HTTP_HOST']}/operasional/public/storage/" . ltrim($path, '/');
-                // Cek via junction apakah file bisa diakses
-                $junctionFile = $laravelStorage . '/' . $path;
-                if (file_exists($junctionFile)) {
-                    $url = $fallbackPath;
-                    $photoStatus = 'ok';
-                } else {
-                    // File benar-benar tidak ditemukan di manapun
-                    $url = null;
-                    $photoStatus = 'not_found';
-                    error_log("[tagihan_air] Foto tidak ditemukan: path_foto={$path}, dicek di: {$localFile}, {$laravelStorage}/{$path}");
-                }
-            }
-
-            $fotos[] = [
-                'id' => (int)$f['id'],
-                'url' => $url,
-                'photo_status' => $photoStatus,
-            ];
+            error_log("[tagihan_air] Foto tidak ditemukan di storage: path_foto={$path}, dicek di: {$laravelFile}");
         }
+
+        $fotos[] = [
+            'id' => (int)$f['id'],
+            'url' => $url,
+            'photo_status' => $photoStatus,
+        ];
     }
 
     return [
@@ -265,28 +217,22 @@ if ($method === 'POST') {
     // Handle Uploaded Fotos
     if (!empty($_FILES['foto_meter'])) {
         $apiDir = __DIR__;
-        $uploadDir = $apiDir . '/uploads/foto-meter/';
-
-        // Laravel storage — path dinamis berdasarkan struktur folder:
-        //   <wwwRoot>/operasional/storage/app/public/foto-meter/
         $wwwRoot = dirname($apiDir, 2);
-        $laravelStorageDir = $wwwRoot . '/operasional/storage/app/public/foto-meter/';
 
-        if (!is_dir($uploadDir)) {
-            if (!mkdir($uploadDir, 0777, true)) {
-                error_log("[tagihan_air] Gagal membuat folder upload: {$uploadDir}");
-            }
-        }
+        // Semua foto disimpan ke operasional/storage/app/public/foto-meter/
+        // supaya bisa dilayani langsung via public/storage junction + CORS .htaccess
+        $laravelStorageDir = $wwwRoot . '/operasional/storage/app/public/foto-meter/';
 
         // Pastikan Laravel storage directory tersedia
         if (!is_dir($laravelStorageDir)) {
             $laravelBase = $wwwRoot . '/operasional/storage/app/public';
             if (!is_dir($laravelBase)) {
-                error_log("[tagihan_air] WARNING: Laravel storage base tidak ditemukan: {$laravelBase}. Copy ke Laravel storage akan dilewati.");
+                error_log("[tagihan_air] CRITICAL: Laravel storage base tidak ditemukan: {$laravelBase}. Upload dibatalkan.");
+                json_response(["message" => "Server storage tidak tersedia. Hubungi admin."], 500);
             } else {
-                // Buat sub-folder foto-meter otomatis
                 if (!mkdir($laravelStorageDir, 0777, true)) {
-                    error_log("[tagihan_air] WARNING: Gagal membuat folder Laravel storage: {$laravelStorageDir}");
+                    error_log("[tagihan_air] CRITICAL: Gagal membuat folder Laravel storage: {$laravelStorageDir}. Upload dibatalkan.");
+                    json_response(["message" => "Server storage tidak tersedia. Hubungi admin."], 500);
                 }
             }
         }
@@ -304,20 +250,11 @@ if ($method === 'POST') {
                 $newFilename = uniqid('foto_') . '.' . $ext;
                 $relPath = 'foto-meter/' . $newFilename;
 
-                // 1) Simpan ke folder api/uploads lokal
-                if (!move_uploaded_file($tmpName, $uploadDir . $newFilename)) {
-                    error_log("[tagihan_air] Gagal move_uploaded_file: {$tmpName} -> {$uploadDir}{$newFilename}");
+                // Simpan langsung ke Laravel storage (satu lokasi saja)
+                $destPath = $laravelStorageDir . $newFilename;
+                if (!move_uploaded_file($tmpName, $destPath)) {
+                    error_log("[tagihan_air] Gagal move_uploaded_file: {$tmpName} -> {$destPath}");
                     continue; // skip file ini, jangan insert ke DB
-                }
-
-                // 2) Copy ke Laravel storage agar bisa diakses via public/storage junction
-                //    (jangan gunakan @copy — log error supaya mudah debug)
-                if (is_dir($laravelStorageDir)) {
-                    if (!copy($uploadDir . $newFilename, $laravelStorageDir . $newFilename)) {
-                        $errCode = error_get_last();
-                        error_log("[tagihan_air] WARNING: Gagal copy ke Laravel storage: src={$uploadDir}{$newFilename} dest={$laravelStorageDir}{$newFilename} err=" . ($errCode['message'] ?? 'unknown'));
-                        // Upload tetap dianggap berhasil (file sudah tersimpan di api/uploads)
-                    }
                 }
 
                 $fotoStmt = $pdo->prepare("INSERT INTO tagihan_air_foto (tagihan_air_id, path_foto, created_at, updated_at) VALUES (?, ?, ?, ?)");
@@ -353,18 +290,10 @@ if ($method === 'DELETE') {
         $fStmt = $pdo->prepare("SELECT path_foto FROM tagihan_air_foto WHERE tagihan_air_id = ?");
         $fStmt->execute([$id]);
         $fotos = $fStmt->fetchAll();
-        $apiDir = __DIR__;
-        $wwwRoot = dirname($apiDir, 2);
+        $wwwRoot = dirname(__DIR__, 2);
         $laravelStorageBase = $wwwRoot . '/operasional/storage/app/public';
         foreach ($fotos as $f) {
             $fp = $f['path_foto'];
-            // Hapus dari api/uploads
-            if (str_starts_with($fp, 'uploads/')) {
-                @unlink($apiDir . '/' . $fp);
-            } else {
-                @unlink($apiDir . '/uploads/' . $fp);
-            }
-            // Hapus dari Laravel storage
             @unlink($laravelStorageBase . '/' . $fp);
         }
         $pdo->prepare("DELETE FROM tagihan_air_foto WHERE tagihan_air_id = ?")->execute([$id]);
