@@ -360,12 +360,12 @@ class _LoginScreenState extends State<LoginScreen>
             },
           ),
 
-          // Jarak ke copyright dilebarin — dulu 14, sekarang 20.
-          const SizedBox(height: 20),
+          // Jarak ke copyright dilebarin lagi biar agak jauh dari tombol Masuk.
+          const SizedBox(height: 120),
 
           Center(
             child: Text(
-              '© E-OPERASIONAL ${DateTime.now().year}',
+              '© e-operasional ${DateTime.now().year}',
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: AppTheme.textMuted,
@@ -493,7 +493,7 @@ class _LoginScreenState extends State<LoginScreen>
                           Padding(
                             padding: EdgeInsets.fromLTRB(
                               18,
-                              constraints.maxHeight * 0.46,
+                              constraints.maxHeight * 0.36,
                               18,
                               24,
                             ),
