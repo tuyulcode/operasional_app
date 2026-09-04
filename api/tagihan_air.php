@@ -25,18 +25,23 @@ function format_tagihan_item($pdo, $t, $baseUrl) {
     $wwwRoot = dirname(__DIR__, 2); // .../www (parent kedua)
     $laravelStorage = $wwwRoot . '/operasional/storage/app/public';
 
+    // Base URL untuk serve_foto — gunakan absolute URL supaya
+    // Flutter Image.network() bisa langsung load tanpa masalah CORS.
+    // $baseUrl = http://localhost/operasional_app/api
+    $serveBase = rtrim($baseUrl, '/') . '/tagihan_air.php?action=serve_foto&path=';
+
     $fotos = [];
     foreach ($fotosRaw as $f) {
         $path = $f['path_foto'];
 
-        // Semua foto dilayani dari operasional/public/storage/ saja.
-        // path_foto di DB selalu relatif (mis. "foto-meter/xxx.png").
         $laravelFile = $laravelStorage . '/' . $path;
         $url = null;
         $photoStatus = 'not_found';
 
         if (file_exists($laravelFile)) {
-            $url = "http://{$_SERVER['HTTP_HOST']}/operasional/public/storage/" . ltrim($path, '/');
+            // Gunakan relative URL supaya always same-origin.
+            // Flutter Web akan resolve relative terhadap base URL API.
+            $url = $serveBase . rawurlencode($path);
             $photoStatus = 'ok';
         } else {
             error_log("[tagihan_air] Foto tidak ditemukan di storage: path_foto={$path}, dicek di: {$laravelFile}");
@@ -73,6 +78,41 @@ function format_tagihan_item($pdo, $t, $baseUrl) {
 }
 
 $baseUrl = get_base_url();
+
+// ── SERVE FOTO ────────────────────────────────────────────────────
+// Melayani foto dari operasional/storage/app/public/ dengan CORS header.
+// Flutter Web butuh foto served dari origin yang sama supaya tidak
+// diblokir CORS. Dengan ini, URL foto = same-origin (api/tagihan_air.php).
+if ($action === 'serve_foto' && $method === 'GET') {
+    $path = $_GET['path'] ?? '';
+    if ($path === '' || str_contains($path, '..')) {
+        http_response_code(400);
+        exit;
+    }
+
+    $wwwRoot = dirname(__DIR__, 2);
+    $file = $wwwRoot . '/operasional/storage/app/public/' . $path;
+
+    if (!file_exists($file) || !is_file($file)) {
+        http_response_code(404);
+        exit;
+    }
+
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    $mimeMap = [
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png'  => 'image/png',
+        'gif'  => 'image/gif',
+        'webp' => 'image/webp',
+    ];
+    $mime = $mimeMap[$ext] ?? 'application/octet-stream';
+
+    header('Content-Type: ' . $mime);
+    header('Cache-Control: public, max-age=86400');
+    readfile($file);
+    exit;
+}
 
 // ── GET ──
 if ($method === 'GET') {
