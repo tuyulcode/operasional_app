@@ -83,6 +83,10 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
   }
 
   double get _pemakaian {
+    // Sama seperti fix di web: kalau Meter Bulan Ini masih kosong, jangan
+    // hitung (0 - meterLalu) x faktor — itu menghasilkan angka negatif
+    // yang menyesatkan, padahal user belum isi apa-apa.
+    if (_meterIniController.text.trim().isEmpty) return 0;
     final ini = double.tryParse(_meterIniController.text) ?? 0;
     final lalu = double.tryParse(_meterLaluController.text) ?? 0;
     final faktor = double.tryParse(_meterFaktorController.text) ?? 1;
