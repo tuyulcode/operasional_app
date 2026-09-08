@@ -13,8 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $db_host = "localhost";
 $db_port = "3306";
 $db_name = "umumcsrc_operasional";
-$db_user = "root";
-$db_pass = "";
+$db_user = "umumcsrc_admin";
+$db_pass = "umumcsr_123";
 
 try {
     $pdo = new PDO("mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4", $db_user, $db_pass, [
