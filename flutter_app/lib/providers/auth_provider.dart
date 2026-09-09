@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../models/user.dart';
@@ -17,17 +18,19 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
   String? get error => _error;
 
+  // Cek status login cukup dari data user yang tersimpan lokal di HP.
+  // Tidak ada token/verifikasi ke server sama sekali.
   Future<void> checkAuth() async {
-    final token = await StorageService.getToken();
-    if (token == null) {
+    final userJson = await StorageService.getUserJson();
+
+    if (userJson == null) {
       _isLoggedIn = false;
       notifyListeners();
       return;
     }
 
     try {
-      final res = await _api.getUser();
-      _user = User.fromJson(res.data['user']);
+      _user = User.fromJson(jsonDecode(userJson));
       _isLoggedIn = true;
     } catch (_) {
       _isLoggedIn = false;
@@ -43,9 +46,9 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final res = await _api.login(username, password);
-      final token = res.data['token'] as String;
-      await StorageService.saveToken(token);
+
       await StorageService.saveUsername(username);
+      await StorageService.saveUserJson(jsonEncode(res.data['user']));
 
       _user = User.fromJson(res.data['user']);
       _isLoggedIn = true;

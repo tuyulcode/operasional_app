@@ -36,7 +36,7 @@ class ApiService {
 
   // ── Auth ──
   Future<Response> login(String username, String password) async {
-    return _dio.post('/login.php', data: {
+    return _dio.post('/login', data: {
       'username': username,
       'password': password,
     });
