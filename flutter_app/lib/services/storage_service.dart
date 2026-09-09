@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StorageService {
   static const String _tokenKey = 'auth_token';
   static const String _usernameKey = 'username';
+  static const String _userJsonKey = 'user_json';
 
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,6 +33,23 @@ class StorageService {
   static Future<void> removeUsername() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_usernameKey);
+  }
+
+  // Menyimpan data user (hasil login, dalam bentuk JSON string) supaya
+  // bisa dibaca lagi tanpa perlu request ulang ke server.
+  static Future<void> saveUserJson(String userJson) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userJsonKey, userJson);
+  }
+
+  static Future<String?> getUserJson() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userJsonKey);
+  }
+
+  static Future<void> removeUserJson() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_userJsonKey);
   }
 
   static Future<void> clearAll() async {
