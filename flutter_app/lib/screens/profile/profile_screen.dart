@@ -170,11 +170,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                     ],
                                   ),
-                                  child: user?.photoUrl != null
+                                  child: (user?.photoUrl != null &&
+                                          user!.photoUrl!.trim().isNotEmpty)
                                       ? ClipOval(
                                           child: Image.network(
-                                            user!.photoUrl!,
+                                            user.photoUrl!,
                                             fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                              // URL foto gagal dimuat (rusak,
+                                              // 404, atau tidak bisa diakses)
+                                              // → fallback ke ikon default,
+                                              // bukan icon broken-image.
+                                              return const Icon(
+                                                Icons.person_rounded,
+                                                size: 46,
+                                                color: Colors.white,
+                                              );
+                                            },
+                                            loadingBuilder: (context, child,
+                                                progress) {
+                                              if (progress == null) {
+                                                return child;
+                                              }
+                                              return const Center(
+                                                child: SizedBox(
+                                                  width: 22,
+                                                  height: 22,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: Colors.white70,
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           ),
                                         )
                                       : const Icon(
