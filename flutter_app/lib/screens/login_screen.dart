@@ -396,7 +396,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             child: ClipOval(
               child: Image.asset(
-                'assets/images/logo.png',
+                'assets/images/logo1.png',
                 fit: BoxFit.contain,
               ),
             ),
