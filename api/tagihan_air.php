@@ -186,6 +186,28 @@ if ($method === 'POST') {
 
     $periodeDate = date('Y-m-01', strtotime($periode . '-01'));
 
+    // ── Cegah duplikat: 1 titik meter cuma boleh punya 1 tagihan per
+    // periode (bulan) yang sama. Beda titik meter di periode yang sama
+    // tetap boleh. Saat update (ada $id), record dirinya sendiri
+    // dikecualikan dari pengecekan.
+    if (!empty($id)) {
+        $dupStmt = $pdo->prepare(
+            "SELECT id FROM tagihan_air WHERE titik_meter_id = ? AND periode = ? AND id != ? LIMIT 1"
+        );
+        $dupStmt->execute([$titik_meter_id, $periodeDate, $id]);
+    } else {
+        $dupStmt = $pdo->prepare(
+            "SELECT id FROM tagihan_air WHERE titik_meter_id = ? AND periode = ? LIMIT 1"
+        );
+        $dupStmt->execute([$titik_meter_id, $periodeDate]);
+    }
+    if ($dupStmt->fetch()) {
+        json_response([
+            "message" => "Tagihan untuk titik meter dan periode ini sudah ada.",
+            "errors" => ["periode" => ["Tagihan untuk titik meter dan periode ini sudah ada."]]
+        ], 422);
+    }
+
     if ($meter_lalu === null) {
         // Find previous
         $prevStmt = $pdo->prepare("SELECT meter_ini FROM tagihan_air WHERE titik_meter_id = ? AND periode < ? ORDER BY periode DESC, id DESC LIMIT 1");
@@ -242,9 +264,10 @@ if ($method === 'POST') {
         $tagihanId = $id;
         $msg = "Tagihan air berhasil diperbarui.";
     } else {
-        // INSERT — selalu membuat baris baru, meski titik meter & periode
-        // sama dengan data yang sudah ada (satu meter boleh punya lebih
-        // dari satu tagihan di bulan yang sama).
+        // INSERT — membuat baris baru. Duplikat titik_meter_id + periode
+        // sudah ditolak di atas sebelum sampai sini, dan UNIQUE KEY di
+        // database (tagihan_air_titik_meter_id_periode_unique) jadi
+        // pengaman lapis kedua kalau ada race condition.
         $insertStmt = $pdo->prepare("
             INSERT INTO tagihan_air (titik_meter_id, periode, meter_lalu, meter_ini, meter_faktor, tarif, pemakaian, ppn_persentase, ppn_nominal, jumlah, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
