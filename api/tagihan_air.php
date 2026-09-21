@@ -5,17 +5,29 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 $id = $_GET['id'] ?? null;
 
-// Helpers
-function format_tagihan_item($pdo, $t, $baseUrl) {
-    $monthsId = [
-        '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
-        '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
-        '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
-    ];
-    $dt = strtotime($t['periode']);
+const MONTHS_ID = [
+    '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+    '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+    '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+];
+
+// Label periode dalam Bahasa Indonesia (mis. "Agustus 2026") dari string
+// tanggal apa pun yang bisa di-parse strtotime. Dipakai baik untuk
+// menampilkan data maupun menyusun pesan error, supaya konsisten.
+function periode_label(string $dateStr): string {
+    $dt = strtotime($dateStr);
     $m = date('m', $dt);
     $y = date('Y', $dt);
-    $periodeLabel = ($monthsId[$m] ?? '') . ' ' . $y;
+    return (MONTHS_ID[$m] ?? '') . ' ' . $y;
+}
+
+// Helpers
+function format_tagihan_item($pdo, $t, $baseUrl) {
+    // FIX: $dt sempat kehapus saat periode_label() diekstrak jadi fungsi
+    // terpisah — variabel itu masih dipakai di bawah (field 'periode'),
+    // jadi harus tetap dihitung di sini juga.
+    $dt = strtotime($t['periode']);
+    $periodeLabel = periode_label($t['periode']);
 
     // Get fotos
     $stmt = $pdo->prepare("SELECT id, path_foto FROM tagihan_air_foto WHERE tagihan_air_id = ?");
@@ -186,6 +198,86 @@ if ($method === 'POST') {
 
     $periodeDate = date('Y-m-01', strtotime($periode . '-01'));
 
+    // ── Validasi tambahan — samakan persis dengan validateData() di
+    // TagihanAirController (web), supaya API ini tidak lebih longgar
+    // dari web hanya karena field-nya "terkunci" di UI Flutter (client
+    // yang akses API langsung tetap harus lolos validasi yang sama).
+    if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+        json_response([
+            "message" => "Format periode tidak valid.",
+            "errors" => ["periode" => ["Format periode tidak valid."]]
+        ], 422);
+    }
+    if ($meter_ini < 0) {
+        json_response([
+            "message" => "Meter Bulan Ini tidak boleh negatif.",
+            "errors" => ["meter_ini" => ["Meter Bulan Ini tidak boleh negatif."]]
+        ], 422);
+    }
+    if ($meter_faktor < 0) {
+        json_response([
+            "message" => "Meter Faktor tidak boleh negatif.",
+            "errors" => ["meter_faktor" => ["Meter Faktor tidak boleh negatif."]]
+        ], 422);
+    }
+    if ($tarif <= 0) {
+        json_response([
+            "message" => "Tarif harus lebih besar dari 0.",
+            "errors" => ["tarif" => ["Tarif harus lebih besar dari 0."]]
+        ], 422);
+    }
+
+    // ── Validasi foto — samakan dengan aturan web: maksimal 10 foto per
+    // transaksi (termasuk foto lama saat edit), format jpg/jpeg/png,
+    // maksimal 5MB per file.
+    if (!empty($_FILES['foto_meter'])) {
+        $filesCheck = $_FILES['foto_meter'];
+        $namesCheck = is_array($filesCheck['name']) ? $filesCheck['name'] : [$filesCheck['name']];
+        $sizesCheck = is_array($filesCheck['size']) ? $filesCheck['size'] : [$filesCheck['size']];
+        $errorsCheck = is_array($filesCheck['error']) ? $filesCheck['error'] : [$filesCheck['error']];
+
+        $countBaru = 0;
+        foreach ($errorsCheck as $e) {
+            if ($e === UPLOAD_ERR_OK) $countBaru++;
+        }
+
+        $existingCount = 0;
+        if (!empty($id)) {
+            $cntStmt = $pdo->prepare("SELECT COUNT(*) FROM tagihan_air_foto WHERE tagihan_air_id = ?");
+            $cntStmt->execute([$id]);
+            $existingCount = (int)$cntStmt->fetchColumn();
+        }
+
+        if ($existingCount + $countBaru > 10) {
+            $pesanFoto = "Total foto maksimal 10 per transaksi" .
+                ($existingCount > 0 ? " (sudah ada {$existingCount} foto tersimpan)." : ".");
+            json_response([
+                "message" => $pesanFoto,
+                "errors" => ["foto_meter" => [$pesanFoto]]
+            ], 422);
+        }
+
+        $allowedExt = ['jpg', 'jpeg', 'png'];
+        $maxFotoSize = 5 * 1024 * 1024; // 5MB, samakan dengan web (max:5120 KB)
+        foreach ($namesCheck as $i => $origName) {
+            if (($errorsCheck[$i] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) continue;
+
+            $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowedExt, true)) {
+                json_response([
+                    "message" => "Foto harus berformat jpg, jpeg, atau png.",
+                    "errors" => ["foto_meter" => ["Foto harus berformat jpg, jpeg, atau png."]]
+                ], 422);
+            }
+            if (($sizesCheck[$i] ?? 0) > $maxFotoSize) {
+                json_response([
+                    "message" => "Ukuran foto maksimal 5 MB.",
+                    "errors" => ["foto_meter" => ["Ukuran foto maksimal 5 MB."]]
+                ], 422);
+            }
+        }
+    }
+
     // ── Cegah duplikat: 1 titik meter cuma boleh punya 1 tagihan per
     // periode (bulan) yang sama. Beda titik meter di periode yang sama
     // tetap boleh. Saat update (ada $id), record dirinya sendiri
@@ -221,6 +313,18 @@ if ($method === 'POST') {
                 "errors" => ["meter_lalu" => ["Wajib diisi."]]
             ], 422);
         }
+    }
+
+    // ── Meter Bulan Ini tidak boleh kurang dari Meter Bulan Lalu ────
+    // Samakan persis pesannya dengan validasi di web (TagihanAirController
+    // ::store/update), supaya konsisten di semua platform.
+    if ($meter_ini < $meter_lalu) {
+        $pesanMeterIni = "Meter Bulan Ini (" . number_format($meter_ini, 2, ',', '.') .
+            ") tidak boleh kurang dari Meter Bulan Lalu (" . number_format($meter_lalu, 2, ',', '.') . ").";
+        json_response([
+            "message" => $pesanMeterIni,
+            "errors" => ["meter_ini" => [$pesanMeterIni]]
+        ], 422);
     }
 
     $pemakaian = ($meter_ini - $meter_lalu) * $meter_faktor;

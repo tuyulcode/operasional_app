@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,6 +40,13 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
   bool _isLoadingMeterLalu = true;
   List<File> _fotos = [];
 
+  // Warning real-time "Meter Bulan Ini < Meter Bulan Lalu" — sama seperti
+  // di web: di-debounce 1 detik saat mengetik, dan hanya informasional
+  // (tidak memblokir tombol Lanjut). Yang benar-benar menolak penyimpanan
+  // adalah validasi di server saat submit.
+  String? _meterIniWarning;
+  Timer? _meterIniDebounce;
+
   final _picker = ImagePicker();
   final _currencyFormat =
       NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -60,6 +68,7 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     _meterIniController.dispose();
     _meterFaktorController.dispose();
     _tarifController.dispose();
+    _meterIniDebounce?.cancel();
     super.dispose();
   }
 
@@ -119,6 +128,34 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
         (_meterLaluAutoFilled || _meterLaluController.text.isNotEmpty) &&
         _meterFaktorController.text.isNotEmpty &&
         _tarifController.text.isNotEmpty;
+  }
+
+  // Peringatan real-time kalau Meter Bulan Ini < Meter Bulan Lalu — sama
+  // seperti recalcTotals() di web: warning lama langsung disembunyikan
+  // saat mengetik, lalu dicek ulang setelah jeda 1 detik supaya tidak
+  // berkedip-kedip tiap huruf/angka yang diketik.
+  void _onMeterIniChanged(String value) {
+    setState(() {
+      _meterIniWarning = null;
+    });
+
+    _meterIniDebounce?.cancel();
+    _meterIniDebounce = Timer(const Duration(milliseconds: 1000), () {
+      if (!mounted) return;
+
+      final ini = double.tryParse(_meterIniController.text) ?? 0;
+      final lalu = double.tryParse(_meterLaluController.text) ?? 0;
+
+      setState(() {
+        if (value.trim().isNotEmpty && lalu > 0 && ini < lalu) {
+          _meterIniWarning =
+              'Meter Bulan Ini (${ini.toStringAsFixed(0)}) kurang dari '
+              'Meter Bulan Lalu (${lalu.toStringAsFixed(0)})';
+        } else {
+          _meterIniWarning = null;
+        }
+      });
+    });
   }
 
   Future<void> _pickPhoto() async {
@@ -685,7 +722,11 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(
+                color: _meterIniWarning != null
+                    ? AppTheme.error
+                    : const Color(0xFFE2E8F0),
+              ),
             ),
             child: Row(
               children: [
@@ -707,7 +748,10 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    onChanged: (_) => setState(() {}),
+                    onChanged: (v) {
+                      setState(() {}); // update Jumlah Pengambilan dkk langsung
+                      _onMeterIniChanged(v);
+                    },
                   ),
                 ),
                 Icon(Icons.edit_note_rounded,
@@ -715,6 +759,25 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
               ],
             ),
           ),
+          if (_meterIniWarning != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.error_outline_rounded,
+                    size: 12, color: AppTheme.error),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    _meterIniWarning!,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppTheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
 
           // Meter Faktor & Tarif — selalu otomatis dari data titik meter
