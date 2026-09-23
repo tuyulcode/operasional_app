@@ -9,6 +9,7 @@ import '../../models/titik_meter.dart';
 import '../../providers/tagihan_provider.dart';
 import '../main_shell.dart';
 import '../../screens/profile/profile_screen.dart';
+import '../../widgets/app_snackbar.dart';
 import '../../widgets/tappable.dart';
 
 class InputStep3Screen extends StatefulWidget {
@@ -69,12 +70,21 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
     if (success && mounted) {
       _showSuccessDialog();
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(prov.error ?? 'Gagal menyimpan'),
-          backgroundColor: AppTheme.error,
-        ),
-      );
+      // Pesan error dari server (mis. "Tagihan untuk titik meter dan
+      // periode ini sudah ada.", atau pesan validasi meter_ini) ditampilkan
+      // sebagai subtitle di bawah judul singkat "Gagal menyimpan", lewat
+      // AppSnackbar — bukan SnackBar bawaan yang polos. Kalau errornya
+      // soal koneksi, pakai varian offline (ikon wifi-off) supaya lebih
+      // jelas ini bukan masalah data yang diinput.
+      final msg = prov.error;
+      if (msg == null) {
+        AppSnackbar.error(context, title: 'Gagal menyimpan');
+      } else if (msg.toLowerCase().contains('terhubung') ||
+          msg.toLowerCase().contains('jaringan')) {
+        AppSnackbar.offline(context, subtitle: msg);
+      } else {
+        AppSnackbar.error(context, title: 'Gagal menyimpan', subtitle: msg);
+      }
     }
   }
 
