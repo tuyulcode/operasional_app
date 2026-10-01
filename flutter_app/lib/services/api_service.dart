@@ -74,7 +74,7 @@ class ApiService {
 
   // ── Tagihan Air ──
   Future<Response> getTagihanAir({int? areaId, String? bulan, String? search}) async {
-    return _dio.get('/tagihan_air.php', queryParameters: {
+    return _dio.get('/tagihan-air', queryParameters: {
       if (areaId != null) 'area_id': areaId,
       if (bulan != null) 'bulan': bulan,
       if (search != null && search.isNotEmpty) 'search': search,
