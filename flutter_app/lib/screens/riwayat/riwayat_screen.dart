@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
 import '../../models/tagihan_air.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/master_data_provider.dart';
 import '../../providers/tagihan_provider.dart';
 import '../../screens/profile/profile_screen.dart';
@@ -242,6 +243,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // ============================================================
 
   Widget _buildHeader() {
+    final auth = context.watch<AuthProvider>();
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -312,26 +315,39 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
               const Spacer(),
 
-              // Menu profil — tap untuk membuka ProfileScreen
+              // Menu profil — sama persis dengan Dashboard
               Tappable(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  );
-                },
-                borderRadius: BorderRadius.circular(10),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
+                circular: true,
                 child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF13213D),
-                    borderRadius: BorderRadius.circular(10),
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.secondary,
+                    shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.person_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
+                  child:
+                      auth.user?.photoUrl != null &&
+                          auth.user!.photoUrl!.isNotEmpty
+                      ? ClipOval(
+                          child: Image.network(
+                            auth.user!.photoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.person_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                          ),
+                        )
+                      : const Icon(
+                          Icons.person_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                 ),
               ),
             ],
