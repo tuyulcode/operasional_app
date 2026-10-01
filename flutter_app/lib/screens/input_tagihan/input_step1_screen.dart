@@ -6,7 +6,6 @@ import '../../config/theme.dart';
 import '../../models/area.dart';
 import '../../models/titik_meter.dart';
 import '../../providers/master_data_provider.dart';
-import '../../screens/profile/profile_screen.dart';
 import '../../widgets/tappable.dart';
 import 'input_step2_screen.dart';
 
@@ -232,27 +231,6 @@ class _InputStep1ScreenState extends State<InputStep1Screen> {
                 ),
               ),
               const Spacer(),
-              // Menu profil — tap untuk membuka ProfileScreen
-              Tappable(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ProfileScreen(),
-                    ),
-                  );
-                },
-                circular: true,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.secondary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.person_rounded,
-                      color: Colors.white, size: 16),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 20),
