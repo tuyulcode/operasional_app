@@ -20,7 +20,16 @@ class RiwayatScreen extends StatefulWidget {
   /// tab utama dari bottom navbar.
   final bool showBackButton;
 
-  const RiwayatScreen({super.key, this.showBackButton = false});
+  /// ID tagihan yang mau di-highlight (abu-abu) dan di-scroll otomatis.
+  /// Diisi saat dibuka dari item "Aktivitas Terakhir" di Dashboard.
+  /// Dibandingkan dengan `t.id.toString()`.
+  final String? highlightId;
+
+  const RiwayatScreen({
+    super.key,
+    this.showBackButton = false,
+    this.highlightId,
+  });
 
   @override
   State<RiwayatScreen> createState() => _RiwayatScreenState();
@@ -29,6 +38,16 @@ class RiwayatScreen extends StatefulWidget {
 class _RiwayatScreenState extends State<RiwayatScreen> {
   final _searchController = TextEditingController();
   Timer? _searchDebounce;
+
+  // ── Highlight dari Dashboard ──
+  /// Berapa lama warna abu-abu bertahan sebelum memudar.
+  static const Duration _highlightDuration = Duration(seconds: 3);
+
+  final _scrollController = ScrollController();
+  final GlobalKey _highlightKey = GlobalKey();
+  bool _highlightActive = false;
+  bool _highlightHandled = false;
+  bool _dataRequested = false;
 
   final _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -61,9 +80,14 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   void initState() {
     super.initState();
 
+    _highlightActive = widget.highlightId != null;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MasterDataProvider>().loadAreas();
       _loadData();
+      // Highlight baru boleh diproses setelah load data diminta, supaya
+      // scroll tidak hilang saat list diganti spinner lalu dibangun ulang.
+      _dataRequested = true;
     });
   }
 
@@ -71,6 +95,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   void dispose() {
     _searchController.dispose();
     _searchDebounce?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -140,6 +165,42 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 
   // ============================================================
+  // HIGHLIGHT (dari Dashboard)
+  // ============================================================
+
+  bool _isHighlightTarget(TagihanAir t) =>
+      widget.highlightId != null && t.id.toString() == widget.highlightId;
+
+  /// Scroll ke kartu yang dituju, tampilkan abu-abu, lalu pudarkan.
+  void _scheduleHighlight(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+
+      // Kalau kartunya ada di luar 5 item pertama, buka semua dulu.
+      if (index >= 5 && !_showAll) {
+        setState(() => _showAll = true);
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted) return;
+      }
+
+      final ctx = _highlightKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        await Scrollable.ensureVisible(
+          ctx,
+          alignment: 0.15,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutCubic,
+        );
+      }
+
+      // Hapus blok di bawah ini kalau abu-abu mau tetap menyala terus.
+      await Future.delayed(_highlightDuration);
+      if (!mounted) return;
+      setState(() => _highlightActive = false);
+    });
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
@@ -150,6 +211,18 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     final allTagihans = tagProv.tagihans;
 
     final filteredTagihans = _getFilteredTagihans(allTagihans);
+
+    // Proses highlight sekali, begitu data sudah selesai dimuat.
+    if (widget.highlightId != null &&
+        !_highlightHandled &&
+        _dataRequested &&
+        !tagProv.isLoading) {
+      final idx = filteredTagihans.indexWhere(_isHighlightTarget);
+      if (idx >= 0) {
+        _highlightHandled = true;
+        _scheduleHighlight(idx);
+      }
+    }
 
     final totalTagihan = filteredTagihans.fold<double>(
       0.0,
@@ -199,6 +272,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                     : filteredTagihans.isEmpty
                     ? _buildEmpty()
                     : ListView(
+                        controller: _scrollController,
+                        // Saat ada highlight, bangun item di luar layar juga
+                        // supaya Scrollable.ensureVisible bisa menemukannya.
+                        cacheExtent: _highlightActive ? 10000 : null,
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
                         children: [
@@ -718,10 +795,18 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // ============================================================
 
   Widget _buildTagihanCard(TagihanAir t) {
-    return Container(
+    final isTarget = _isHighlightTarget(t);
+    final isHighlighted = isTarget && _highlightActive;
+
+    return AnimatedContainer(
+      // Key tetap dipasang selama kartu ini target, supaya animasi
+      // pudar abu-abu → putih tidak ter-reset.
+      key: isTarget ? _highlightKey : null,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isHighlighted ? const Color(0xFFE3E6EB) : Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFE4E8EF)),
         boxShadow: [
