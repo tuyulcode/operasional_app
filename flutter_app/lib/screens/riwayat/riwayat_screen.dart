@@ -746,17 +746,24 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     );
   }
 
+  /// Angka desimal gaya Indonesia: koma sebagai pemisah, tanpa ",0".
+  /// Contoh: 127.4 -> "127,4", 127.0 -> "127".
+  String _decimalId(double value) {
+    final s = value.toStringAsFixed(1).replaceAll('.', ',');
+    return s.endsWith(',0') ? s.substring(0, s.length - 2) : s;
+  }
+
   String _formatCompactCurrency(double value) {
     if (value >= 1000000000) {
-      return 'Rp${(value / 1000000000).toStringAsFixed(1)}M';
+      return 'Rp${_decimalId(value / 1000000000)} miliar';
     }
 
     if (value >= 1000000) {
-      return 'Rp${(value / 1000000).toStringAsFixed(1)}M';
+      return 'Rp${_decimalId(value / 1000000)} juta';
     }
 
     if (value >= 1000) {
-      return 'Rp${(value / 1000).toStringAsFixed(0)}K';
+      return 'Rp${(value / 1000).toStringAsFixed(0)} ribu';
     }
 
     return _currencyFormat.format(value);
