@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/input_draft.dart';
 import '../../widgets/tappable.dart';
 import '../login_screen.dart';
 
@@ -592,8 +593,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 46,
                       child: ElevatedButton(
                         onPressed: () async {
+                          final auth = context.read<AuthProvider>();
                           Navigator.pop(context);
-                          await context.read<AuthProvider>().logout();
+                          await InputDraft.clear();
+                          await auth.logout();
                           if (context.mounted) {
                             Navigator.of(context).pushAndRemoveUntil(
                               MaterialPageRoute(

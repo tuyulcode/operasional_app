@@ -11,6 +11,8 @@ import '../../models/titik_meter.dart';
 import '../../providers/master_data_provider.dart';
 import '../../providers/tagihan_provider.dart';
 import '../../screens/profile/profile_screen.dart';
+import '../../services/input_draft.dart';
+import '../../widgets/app_snackbar.dart';
 import '../../widgets/tappable.dart';
 import 'input_step3_screen.dart';
 
@@ -18,12 +20,20 @@ class InputStep2Screen extends StatefulWidget {
   final Area area;
   final TitikMeter titikMeter;
   final String periode;
+  final String? initialMeterLalu;
+  final String? initialMeterIni;
+  final bool initialMeterLaluAutoFilled;
+  final List<File> initialFotos;
 
   const InputStep2Screen({
     super.key,
     required this.area,
     required this.titikMeter,
     required this.periode,
+    this.initialMeterLalu,
+    this.initialMeterIni,
+    this.initialMeterLaluAutoFilled = false,
+    this.initialFotos = const [],
   });
 
   @override
@@ -59,7 +69,20 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     // bisa diedit manual oleh user sama sekali.
     _meterFaktorController.text = widget.titikMeter.meterFaktor.toString();
     _tarifController.text = widget.titikMeter.tarifHarga.toStringAsFixed(0);
-    _fetchMeterLalu();
+
+    _fotos = List<File>.of(widget.initialFotos);
+
+    if (widget.initialMeterLalu != null) {
+      _meterLaluController.text = widget.initialMeterLalu!;
+      _meterLaluAutoFilled = widget.initialMeterLaluAutoFilled;
+      _isLoadingMeterLalu = false;
+    } else {
+      _fetchMeterLalu();
+    }
+
+    if (widget.initialMeterIni != null) {
+      _meterIniController.text = widget.initialMeterIni!;
+    }
   }
 
   @override
@@ -158,29 +181,72 @@ class _InputStep2ScreenState extends State<InputStep2Screen> {
     });
   }
 
+  Map<String, dynamic> _draftData() {
+    return {
+      'area': {
+        'id': widget.area.id,
+        'nama': widget.area.nama,
+        'alamat': widget.area.alamat,
+        'kena_ppn': widget.area.kenaPpn,
+      },
+      'titikMeter': {
+        'id': widget.titikMeter.id,
+        'area_id': widget.titikMeter.areaId,
+        'nama': widget.titikMeter.nama,
+        'lokasi_flow_meter': widget.titikMeter.lokasiFlowMeter,
+        'meter_faktor': widget.titikMeter.meterFaktor,
+        'tarif_harga': widget.titikMeter.tarifHarga,
+        'status': widget.titikMeter.status,
+        'area_nama': widget.titikMeter.areaNama,
+      },
+      'periode': widget.periode,
+      'meterLalu': _meterLaluController.text,
+      'meterIni': _meterIniController.text,
+      'meterLaluAutoFilled': _meterLaluAutoFilled,
+      'fotos': _fotos.map((f) => f.path).toList(),
+      'pendingCamera': true,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+  }
+
   Future<void> _pickPhoto() async {
     if (_fotos.length >= 10) return;
-    final picked = await _picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1920,
-      maxHeight: 1080,
-      imageQuality: 85,
-    );
-    if (picked != null) {
-      setState(() => _fotos.add(File(picked.path)));
+    try {
+      await InputDraft.save(_draftData());
+      final picked = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+      if (picked != null && mounted) {
+        setState(() => _fotos.add(File(picked.path)));
+      }
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.error(context, title: 'Gagal membuka kamera');
+      }
+    } finally {
+      await InputDraft.clear();
     }
   }
 
   Future<void> _pickFromGallery() async {
     if (_fotos.length >= 10) return;
-    final picked = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1920,
-      maxHeight: 1080,
-      imageQuality: 85,
-    );
-    if (picked != null) {
-      setState(() => _fotos.add(File(picked.path)));
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+      if (picked != null && mounted) {
+        setState(() => _fotos.add(File(picked.path)));
+      }
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.error(context, title: 'Gagal membuka galeri');
+      }
     }
   }
 
