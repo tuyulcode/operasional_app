@@ -272,7 +272,7 @@ class ApiService {
     }
 
     return _dio.post(
-      '/tagihan-air?id=$id',
+      '/tagihan-air/$id',
       data: formData,
     );
   }
@@ -285,7 +285,7 @@ class ApiService {
     int id,
   ) async {
     return _dio.delete(
-      '/tagihan-air?id=$id',
+      '/tagihan-air/$id',
     );
   }
 }

@@ -20,6 +20,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  // Tinggi 4 tile aktivitas (±74px per tile) + sedikit padding atas
+  static const double _activityMaxHeight = 4 * 74 + 2;
+
   final _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -41,41 +44,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
-      body: RefreshIndicator(
-        color: AppTheme.primary,
-        onRefresh: () => dashProv.loadDashboard(),
-        child: CustomScrollView(
-          slivers: [
-            // ── Header ──
-            SliverToBoxAdapter(child: _buildHeader(auth)),
+      body: Column(
+        children: [
+          // ── Header (tetap diam, tidak ikut scroll) ──
+          _buildHeader(auth),
 
-            // ── Content ──
-            if (dashProv.isLoading)
-              const SliverFillRemaining(
-                child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.primary),
-                ),
-              )
-            else if (dashProv.stats != null)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    const SizedBox(height: 16),
-                    _buildQuickActionsHeader(),
-                    const SizedBox(height: 20),
-                    _buildSummaryCards(dashProv.stats!),
-                    const SizedBox(height: 20),
-                    _buildProgressCard(dashProv.stats!),
-                    const SizedBox(height: 20),
-                    _buildQuickStats(dashProv.stats!),
-                    const SizedBox(height: 20),
-                    _buildActivitySection(dashProv.stats!),
-                  ]),
-                ),
+          // ── Content (scrollable) ──
+          Expanded(
+            child: RefreshIndicator(
+              color: AppTheme.primary,
+              onRefresh: () => dashProv.loadDashboard(),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  if (dashProv.isLoading)
+                    const SliverFillRemaining(
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    )
+                  else if (dashProv.stats != null)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          const SizedBox(height: 16),
+                          _buildQuickActionsHeader(),
+                          const SizedBox(height: 20),
+                          _buildSummaryCards(dashProv.stats!),
+                          const SizedBox(height: 20),
+                          _buildProgressCard(dashProv.stats!),
+                          const SizedBox(height: 20),
+                          _buildQuickStats(dashProv.stats!),
+                          const SizedBox(height: 20),
+                          _buildActivitySection(dashProv.stats!),
+                        ]),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -574,13 +586,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           )
         else
-          ...stats.aktivitasTerakhir.map(
-            (a) => _ActivityTile(
-              titikMeter: a.titikMeter,
-              area: a.area,
-              jumlah: _currencyFormat.format(a.jumlah),
-              status: a.status,
-              updatedAt: a.updatedAt,
+          // Maks 4 item kelihatan (4 x 74px), sisanya discroll di dalam list
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: _activityMaxHeight),
+            child: ListView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(2, 2, 2, 0),
+              physics: const ClampingScrollPhysics(),
+              itemCount: stats.aktivitasTerakhir.length,
+              itemBuilder: (context, i) {
+                final a = stats.aktivitasTerakhir[i];
+                return _ActivityTile(
+                  titikMeter: a.titikMeter,
+                  area: a.area,
+                  jumlah: _currencyFormat.format(a.jumlah),
+                  status: a.status,
+                  updatedAt: a.updatedAt,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RiwayatScreen(
+                        showBackButton: true,
+                        highlightId: a.id.toString(),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
       ],
@@ -656,6 +687,7 @@ class _ActivityTile extends StatelessWidget {
   final String jumlah;
   final String status;
   final String updatedAt;
+  final VoidCallback? onTap;
 
   const _ActivityTile({
     required this.titikMeter,
@@ -663,6 +695,7 @@ class _ActivityTile extends StatelessWidget {
     required this.jumlah,
     required this.status,
     required this.updatedAt,
+    this.onTap,
   });
 
   String _formatDate() {
@@ -679,8 +712,12 @@ class _ActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Tappable(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -755,6 +792,8 @@ class _ActivityTile extends StatelessWidget {
             ],
           ),
         ],
+      ),
+        ),
       ),
     );
   }
