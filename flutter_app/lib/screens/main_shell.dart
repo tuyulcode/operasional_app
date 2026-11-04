@@ -1,8 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../config/theme.dart';
+import '../models/area.dart';
+import '../models/titik_meter.dart';
+import '../services/input_draft.dart';
+import '../widgets/app_snackbar.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'input_tagihan/input_step1_screen.dart';
+import 'input_tagihan/input_step2_screen.dart';
 import 'riwayat/riwayat_screen.dart';
 import '../widgets/tappable.dart';
 
@@ -22,6 +29,90 @@ class _MainShellState extends State<MainShell> {
     }),
     const RiwayatScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _restoreInputDraft();
+    });
+  }
+
+  Future<void> _restoreInputDraft() async {
+    if (!await InputDraft.exists()) return;
+
+    final draft = await InputDraft.load();
+    if (draft == null || draft['pendingCamera'] != true) {
+      await InputDraft.clear();
+      return;
+    }
+
+    final timestampRaw = draft['timestamp'];
+    final timestamp =
+        timestampRaw is String ? DateTime.tryParse(timestampRaw) : null;
+    if (timestamp == null ||
+        DateTime.now().difference(timestamp) > const Duration(minutes: 15)) {
+      await InputDraft.clear();
+      return;
+    }
+
+    try {
+      final areaJson = draft['area'];
+      final titikJson = draft['titikMeter'];
+      final periode = draft['periode'] as String?;
+      if (areaJson is! Map ||
+          titikJson is! Map ||
+          periode == null ||
+          periode.isEmpty) {
+        await InputDraft.clear();
+        return;
+      }
+
+      final area = Area.fromJson(Map<String, dynamic>.from(areaJson));
+      final titikMeter =
+          TitikMeter.fromJson(Map<String, dynamic>.from(titikJson));
+
+      final oldPaths =
+          (draft['fotos'] as List?)?.cast<String>() ?? const <String>[];
+      final restoredPaths = <String>{};
+      for (final path in oldPaths) {
+        if (await File(path).exists()) {
+          restoredPaths.add(path);
+        }
+      }
+
+      if (Platform.isAndroid) {
+        final lost = await ImagePicker().retrieveLostData();
+        final lostFile = lost.file;
+        if (lostFile != null && await File(lostFile.path).exists()) {
+          restoredPaths.add(lostFile.path);
+        }
+      }
+
+      if (!mounted) return;
+
+      final fotos = restoredPaths.map(File.new).toList();
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => InputStep2Screen(
+            area: area,
+            titikMeter: titikMeter,
+            periode: periode,
+            initialMeterLalu: draft['meterLalu'] as String?,
+            initialMeterIni: draft['meterIni'] as String?,
+            initialMeterLaluAutoFilled:
+                draft['meterLaluAutoFilled'] as bool? ?? false,
+            initialFotos: fotos,
+          ),
+        ),
+      );
+
+      AppSnackbar.success(context, title: 'Data input dipulihkan');
+      await InputDraft.clear();
+    } catch (_) {
+      await InputDraft.clear();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

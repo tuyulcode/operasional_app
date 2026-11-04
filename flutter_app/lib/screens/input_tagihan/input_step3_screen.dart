@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../models/area.dart';
 import '../../models/titik_meter.dart';
 import '../../providers/tagihan_provider.dart';
+import '../../services/input_draft.dart';
 import '../main_shell.dart';
 import '../../widgets/app_snackbar.dart';
 import '../../widgets/tappable.dart';
@@ -67,6 +68,7 @@ class _InputStep3ScreenState extends State<InputStep3Screen> {
     );
 
     if (success && mounted) {
+      await InputDraft.clear();
       _showSuccessDialog();
     } else if (mounted) {
       // Pesan error dari server (mis. "Tagihan untuk titik meter dan
